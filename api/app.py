@@ -23,7 +23,7 @@ def strava_login():
 	client=Client()
 	authorize_url = client.authorization_url(client_id=ids, redirect_uri='http://127.0.0.1:5000/post_strava_login', scope=["read","activity:write"])
 	
-	return f'<a href="{authorize_url}" class="button">Login</a>'
+	return f'<a href="{authorize_url}" class="button">Post Activity</a>'
 
 @app.route("/post_strava_login",methods=["GET"])
 def post_strava_login():
