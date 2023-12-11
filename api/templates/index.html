@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
+    
     <title>Leaderboard App</title>
 </head>
 <body>
@@ -14,6 +15,22 @@
     <!-- <div hx-get="http://127.0.0.1:5000/" hx-swap="outerHTML" hx-trigger="click">
         Control Click Me
     </div> -->
-    
+    <form action="/firebase_login" method="POST">
+    <label for="html">Log In</label>
+      <input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
+      <input type="password" id="password" class="fadeIn third" name="pass" placeholder="password">
+      <input type="submit" class="fadeIn fourth" value="Log In">
+    </form>
+    <form action="/firebase_register" method="POST">
+    <label>Register</label>
+        <input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
+        <input type="password" id="password" class="fadeIn third" name="pass" placeholder="password">
+        <input type="submit" class="fadeIn fourth" value="Register">
+      </form>
+    <form action="/firebase_frogot_password" method="POST">
+    <label>Frogot Password</label>
+        <input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
+        <input type="submit" class="fadeIn fourth" value="Frogot Password">
+    </form>
 </body>
 </html>

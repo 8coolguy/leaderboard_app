@@ -4,12 +4,27 @@ from stravalib import Client
 from datetime import datetime,timedelta
 from download_data import get_api_values
 import time
+import pyrebase
+import os
 
-
+config={
+  "apiKey": os.getenv("apiKey"),
+  "authDomain": os.getenv("authDomain"),
+  "databaseURL": os.getenv("databaseURL"),
+  "storageBucket": os.getenv("storageBucket")
+}
 app = Flask(__name__)
 CORS(app)
 s,ids=get_api_values()
 i=0
+#initialize firebase
+firebase = pyrebase.initialize_app(config)
+auth = firebase.auth()
+db = firebase.database()
+
+#Initialze person as dictionary
+person = {"is_logged_in": False, "name": "", "email": "", "uid": ""}
+
 
 @app.route("/", methods=["GET"])
 def index():
@@ -27,9 +42,6 @@ def strava_login():
 
 @app.route("/post_strava_login",methods=["GET"])
 def post_strava_login():
-	global i
-	print(i)
-	i+=1
 	code=request.args.get("code")
 	client=Client()	
 	token_response = client.exchange_code_for_token(client_id=ids, client_secret=s, code=code)
@@ -64,4 +76,57 @@ def post_strava_login():
 		return "<p>Success</p>"
 	except Exception as e:
 		return f'<p>{str(e)}</p>'
-	
+@app.route("/firebase_login",methods=["POST","GET"])
+def firebase_login():
+	if request.method =="POST":
+		result=request.form
+		email=result["email"]
+		password=result["pass"]
+		try:
+			#Try signing in the user with the given information
+			user = auth.sign_in_with_email_and_password(email, password)
+			#Insert the user data in the global person
+			
+			global person
+			person["is_logged_in"] = True
+			person["email"] = user["email"]
+			person["uid"] = user["localId"]
+			print(user)
+			#Get the name of the user
+			data = db.child("users").get()
+			person["name"] = user["displayName"] or email
+			return "<p>Success Login</p>"	
+		except Exception as e:
+			return f'<p>{str(e)}</p>'
+	else:
+		return "<p>GET</p>"
+@app.route("/firebase_register",methods=["POST","GET"])
+def firebase_register():
+	if request.method =="POST":
+		result=request.form
+		email=result["email"]
+		password=result["pass"]
+		try:
+			#Create User
+			user = auth.create_user_with_email_and_password(email, password)
+			auth.send_email_verification(user['idToken'])
+			
+			return "<p>Success Login</p>"	
+		except Exception as e:
+			return f'<p>{str(e)}</p>'
+	else:
+		return "<p>GET</p>"
+@app.route("/firebase_frogot_password",methods=["POST","GET"])
+def firebase_frogot_password():
+	if request.method =="POST":
+		result=request.form
+		email=result["email"]
+		try:
+			#send recovery email
+			auth.send_password_reset_email(email)
+			return "<p>Success Login</p>"	
+		except Exception as e:
+			return f'<p>{str(e)}</p>'
+	else:
+		return "<p>GET</p>"
+
