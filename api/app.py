@@ -6,6 +6,7 @@ from stravalib import Client
 from datetime import datetime,timedelta
 from download_data import get_api_values
 import time
+import random
 import pyrebase
 import os
 
@@ -90,7 +91,7 @@ def firebase_login():
 			data = db.child("users").get()
 			print("Data",data)
 			session["name"] = user["displayName"] or email
-			return redirect('/')	
+			return redirect("/")
 		except Exception as e:
 			print(e)
 			return f'<p>{str(e)}</p>'
@@ -129,15 +130,32 @@ def firebase_frogot_password():
 def session_user():
 	if request.method =="GET":
 		if session.get("is_logged_in",False):
-			return f'''<p>Hello {session.get("name","Mom")}</p>
-				<button hx-get="/logout" hx-redirect="/" hx-trigger="click">Log Out</button>'''
+			return f'''<p>Hello {session.get("name","Arnav")}</p>
+				<button hx-get="/logout" hx-redirect="/" hx-trigger="click">Log Out</button>
+				<form action="/create_room" method="POST">
+					<label>Room Name</label>
+					<input id="login" class="fadeIn second" name="name" placeholder="Room Name">
+					<input type="submit" class="fadeIn fourth" value="Create Room">
+    			</form>'''
 		else: 
 			return f'''<form action="/firebase_login" method="POST">
 						<label for="html">Log In</label>
 						<input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
 						<input type="password" id="password" class="fadeIn third" name="pass" placeholder="password">
 						<input type="submit" class="fadeIn fourth" value="Log In">
+					</form>
+					<form action="/firebase_register" method="POST">
+						<label>Register</label>
+						<input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
+						<input type="password" id="password" class="fadeIn third" name="pass" placeholder="password">
+						<input type="submit" class="fadeIn fourth" value="Register">
+					</form>
+					<form action="/firebase_frogot_password" method="POST">
+						<label>Frogot Password</label>
+						<input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
+						<input type="submit" class="fadeIn fourth" value="Frogot Password">
 					</form>'''
+					
 @app.route("/logout",methods=["POST","GET"])
 def logout():
 	if request.method =="GET":
@@ -147,3 +165,50 @@ def logout():
 			return make_response(
 				redirect="/"
 			)
+
+@app.route("/create_room",methods=["POST","GET"])
+def create_room():
+	if request.method =="POST" and session.get("is_logged_in",False):
+		result=request.form
+		print(result)
+		name=result["name"]
+		data={"name":name,"players":{},"kicked":{},"host":session['uid'],"type":"private"}
+		res=db.child("rooms").child("past_rooms").push(data)
+		data["id"]=res["name"]
+		data["state"]="w"
+		rooms=db.child("rooms").child("current_rooms").shallow().get().val()
+		if not rooms:
+			res=db.child("rooms").child("current_rooms").child("1").set(data) 
+			room_id=1
+			return redirect(f'''/room/{room_id}''')
+
+		if len(rooms)>999:
+			return '''<p>Error</p>'''
+		for i in range(1,1000):
+			if str(i) in rooms:
+				continue
+			res=db.child("rooms").child("current_rooms").child(str(i)).set(data)
+			room_id=i
+			break
+		print(res)
+		return redirect(f'''/room/{room_id}''')
+
+@app.route("/room/<int:room_id>",methods=["POST","GET"])
+def room(room_id):
+	return render_template("room.html", room_id=room_id)
+
+@app.route("/session_room",methods=["POST","GET"])
+def session_room():
+	return f'''
+		<p>Name:</p>
+		<p>State:</p>
+		<p>players</p>
+		<p></p>
+		<p></p>
+		<p></p>
+		<p></p>
+		<p></p>
+		'''
+
+
+			

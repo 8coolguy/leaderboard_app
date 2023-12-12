@@ -8,9 +8,24 @@
     <title>Leaderboard App</title>
 </head>
 <body>
+    
+    
+    <!-- <div hx-get="http://127.0.0.1:5000/" hx-swap="outerHTML" hx-trigger="click">
+        Control Click Me
+    </div> -->
+    
     <h1>Leaderboard App</h1>
     <div hx-get="/hello" hx-swap="outerHTML" hx-trigger="load"></div>
     <div hx-get="/strava_login" hx-swap="outerHTML" hx-trigger="load"></div>
-    <div hx-get="/session_user" hx-swap="outerHTML" hx-trigger="load"></div>
+    {% if room_id %}
+    <h2>Room: {{ room_id }}</h2>
+    {% else %}  
+    <h2>Room:</h2>
+    {% endif %}
+    <div hx-get="/session_room" hx-swap="outerHTML" hx-trigger="load"></div>
+    
+    
+
+    
 </body>
 </html>
