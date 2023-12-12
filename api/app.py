@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,session, redirect
 from flask_cors import CORS
+from flask_htmx import HTMX, make_response
+from flask_session import Session
 from stravalib import Client
 from datetime import datetime,timedelta
 from download_data import get_api_values
@@ -14,7 +16,11 @@ config={
   "storageBucket": os.getenv("storageBucket")
 }
 app = Flask(__name__)
+app.config['SESSION_TYPE'] = 'filesystem'
+app.config['SECRET_KEY'] = 'super sdfsdfhsidfuhsijdfhskdjfskfhksfhkshfksdhfkjecret key'
 CORS(app)
+htmx=HTMX(app)
+Session(app)
 s,ids=get_api_values()
 i=0
 #initialize firebase
@@ -37,7 +43,6 @@ def hello_world():
 def strava_login():
 	client=Client()
 	authorize_url = client.authorization_url(client_id=ids, redirect_uri='http://127.0.0.1:5000/post_strava_login', scope=["read","activity:write"])
-	
 	return f'<a href="{authorize_url}" class="button">Post Activity</a>'
 
 @app.route("/post_strava_login",methods=["GET"])
@@ -61,21 +66,10 @@ def post_strava_login():
 			activity_type="Ride"
 		)
 		f.close()
+		return "<p>Success</p>"
 	except:
 		return f'<p>{str(e)}</p>'
-	try:
-		# if time.time() > expires_at:
-		# 	refresh_response = client.refresh_access_token(
-		# 		client_id=ids, client_secret=s, refresh_token=refresh_token
-		# 	)
-		# 	access_token = refresh_response["access_token"]
-		# 	refresh_token = refresh_response["refresh_token"]
-		# 	expires_at = refresh_response["expires_at"]
-		# 	print(refresh_response)
-		# # activity.wait(timeout=20)
-		return "<p>Success</p>"
-	except Exception as e:
-		return f'<p>{str(e)}</p>'
+		
 @app.route("/firebase_login",methods=["POST","GET"])
 def firebase_login():
 	if request.method =="POST":
@@ -85,18 +79,20 @@ def firebase_login():
 		try:
 			#Try signing in the user with the given information
 			user = auth.sign_in_with_email_and_password(email, password)
-			#Insert the user data in the global person
 			
-			global person
-			person["is_logged_in"] = True
-			person["email"] = user["email"]
-			person["uid"] = user["localId"]
-			print(user)
+			
+			#insert the user information into the session
+			session["is_logged_in"] = True
+			session["email"] = user["email"]
+			session["uid"] = user["localId"]
+			
 			#Get the name of the user
 			data = db.child("users").get()
-			person["name"] = user["displayName"] or email
-			return "<p>Success Login</p>"	
+			print("Data",data)
+			session["name"] = user["displayName"] or email
+			return redirect('/')	
 		except Exception as e:
+			print(e)
 			return f'<p>{str(e)}</p>'
 	else:
 		return "<p>GET</p>"
@@ -129,4 +125,25 @@ def firebase_frogot_password():
 			return f'<p>{str(e)}</p>'
 	else:
 		return "<p>GET</p>"
-
+@app.route("/session_user",methods=["POST","GET"])
+def session_user():
+	if request.method =="GET":
+		if session.get("is_logged_in",False):
+			return f'''<p>Hello {session.get("name","Mom")}</p>
+				<button hx-get="/logout" hx-redirect="/" hx-trigger="click">Log Out</button>'''
+		else: 
+			return f'''<form action="/firebase_login" method="POST">
+						<label for="html">Log In</label>
+						<input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
+						<input type="password" id="password" class="fadeIn third" name="pass" placeholder="password">
+						<input type="submit" class="fadeIn fourth" value="Log In">
+					</form>'''
+@app.route("/logout",methods=["POST","GET"])
+def logout():
+	if request.method =="GET":
+		if session.get("is_logged_in",False):
+			auth.current_user=None
+			session["is_logged_in"]=False
+			return make_response(
+				redirect="/"
+			)

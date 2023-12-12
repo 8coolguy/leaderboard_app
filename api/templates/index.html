@@ -15,12 +15,7 @@
     <!-- <div hx-get="http://127.0.0.1:5000/" hx-swap="outerHTML" hx-trigger="click">
         Control Click Me
     </div> -->
-    <form action="/firebase_login" method="POST">
-    <label for="html">Log In</label>
-      <input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
-      <input type="password" id="password" class="fadeIn third" name="pass" placeholder="password">
-      <input type="submit" class="fadeIn fourth" value="Log In">
-    </form>
+    <div hx-get="/session_user" hx-swap="outerHTML" hx-trigger="load"></div>
     <form action="/firebase_register" method="POST">
     <label>Register</label>
         <input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
@@ -32,5 +27,6 @@
         <input type="email" id="login" class="fadeIn second" name="email" placeholder="email">
         <input type="submit" class="fadeIn fourth" value="Frogot Password">
     </form>
+    
 </body>
 </html>
