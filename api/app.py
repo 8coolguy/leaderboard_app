@@ -136,6 +136,11 @@ def session_user():
 					<label>Room Name</label>
 					<input id="login" class="fadeIn second" name="name" placeholder="Room Name">
 					<input type="submit" class="fadeIn fourth" value="Create Room">
+    			</form>
+				<form action="/join_room" method="POST">
+					<label>Room Pin</label>
+					<input id="login" class="fadeIn second" name="room_id" placeholder="Room Name">
+					<input type="submit" class="fadeIn fourth" value="Create Room">
     			</form>'''
 		else: 
 			return f'''<form action="/firebase_login" method="POST">
@@ -197,11 +202,13 @@ def create_room():
 def room(room_id):
 	return render_template("room.html", room_id=room_id)
 
-@app.route("/session_room",methods=["POST","GET"])
-def session_room():
+@app.route("/session_room/<int:room_id>",methods=["POST","GET"])
+def session_room(room_id):
+	room=db.child("rooms").child("current_rooms").child(str(room_id)).get().val()
+	print(room)
 	return f'''
-		<p>Name:</p>
-		<p>State:</p>
+		<p>Name:{room['name']}</p>
+		<p>State:{room['state']}</p>
 		<p>players</p>
 		<p></p>
 		<p></p>
@@ -209,6 +216,11 @@ def session_room():
 		<p></p>
 		<p></p>
 		'''
-
+@app.route("/join_room",methods=["POST","GET"])
+def join_room():
+	if request.method =="POST" and session.get("is_logged_in",False):
+		result=request.form
+		room_id=result["room_id"]
+		return redirect(f'''/room/{room_id}''')
 
 			
