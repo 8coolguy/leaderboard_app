@@ -140,7 +140,7 @@ def session_user():
 				<form action="/join_room" method="POST">
 					<label>Room Pin</label>
 					<input id="login" class="fadeIn second" name="room_id" placeholder="Room Name">
-					<input type="submit" class="fadeIn fourth" value="Create Room">
+					<input type="submit" class="fadeIn fourth" value="Join Room">
     			</form>'''
 		else: 
 			return f'''<form action="/firebase_login" method="POST">
@@ -204,23 +204,43 @@ def room(room_id):
 
 @app.route("/session_room/<int:room_id>",methods=["POST","GET"])
 def session_room(room_id):
-	room=db.child("rooms").child("current_rooms").child(str(room_id)).get().val()
-	print(room)
-	return f'''
-		<p>Name:{room['name']}</p>
-		<p>State:{room['state']}</p>
-		<p>players</p>
-		<p></p>
-		<p></p>
-		<p></p>
-		<p></p>
-		<p></p>
-		'''
+	if request.method=="GET":
+		kicked=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").get()
+		if kicked.val() and session['uid'] in kicked.val(): return make_response(redirect="/")
+		room=db.child("rooms").child("current_rooms").child(str(room_id)).get().val()
+		players=''''''
+		for player in room['players'].keys():
+			# print(player,room['players'][player])
+			players+=f'''<div id=res_{player}>'''
+			players+=f'''<p>{room['players'][player]['name']}</p>'''
+			if session['uid']==room['host']:
+				players+=f'''<button hx-post="/kick" hx-target='#res_{player}' uid={player}> Kick</button>'''
+			players+='</div>'
+		return f'''
+			<p>Name:{room['name']}</p>
+			<p>State:{room['state']}</p>
+			<p>Players:</p>
+			'''+players
 @app.route("/join_room",methods=["POST","GET"])
 def join_room():
 	if request.method =="POST" and session.get("is_logged_in",False):
 		result=request.form
 		room_id=result["room_id"]
+		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("players").child(session['uid']).set({"name":session["name"]})
+		print(player)
 		return redirect(f'''/room/{room_id}''')
+@app.route("/kick",methods=["POST","GET"])
+def kick():
+	if request.method =="POST" and session.get("is_logged_in",False):
+		uid=request.headers['Hx-Target'][4:]
+		room_id=request.referrer.split('/')[-1]
+		#notify that you can kick host
+		if uid==db.child("rooms").child("current_rooms").child(room_id).child("host").get().val():
+			return make_response(redirect=request.referrer)
+		
+		player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(uid).remove()
+		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").child(session['uid']).set({"name":session["name"]})
+		
+		return '''<p></p>'''
 
 			

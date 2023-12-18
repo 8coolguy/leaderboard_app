@@ -19,7 +19,7 @@
     <div hx-get="/strava_login" hx-swap="outerHTML" hx-trigger="load"></div>
     {% if room_id %}
     <h2>Room: {{ room_id }}</h2>
-    <div hx-get="{{ '/session_room/' ~ room_id }}" hx-swap="outerHTML" hx-trigger="load"></div>
+    <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load"></div>
     {% else %}  
     <h2>Room:</h2>
     {% endif %}
