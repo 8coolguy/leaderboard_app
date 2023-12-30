@@ -9,6 +9,7 @@ import time
 import random
 import pyrebase
 import os
+from events import socketio
 
 config={
   "apiKey": os.getenv("apiKey"),
@@ -22,6 +23,7 @@ app.config['SECRET_KEY'] = 'super sdfsdfhsidfuhsijdfhskdjfskfhksfhkshfksdhfkjecr
 CORS(app)
 htmx=HTMX(app)
 Session(app)
+socketio.init_app(app)
 s,ids=get_api_values()
 i=0
 #initialize firebase
@@ -81,19 +83,15 @@ def firebase_login():
 			#Try signing in the user with the given information
 			user = auth.sign_in_with_email_and_password(email, password)
 			
-			
 			#insert the user information into the session
 			session["is_logged_in"] = True
 			session["email"] = user["email"]
 			session["uid"] = user["localId"]
 			
 			#Get the name of the user
-			data = db.child("users").get()
-			print("Data",data)
 			session["name"] = user["displayName"] or email
 			return redirect("/")
 		except Exception as e:
-			print(e)
 			return f'<p>{str(e)}</p>'
 	else:
 		return "<p>GET</p>"
@@ -216,6 +214,13 @@ def session_room(room_id):
 			if session['uid']==room['host']:
 				players+=f'''<button hx-post="/kick" hx-target='#res_{player}' uid={player}> Kick</button>'''
 			players+='</div>'
+		if session['uid']==room['host']:
+			players+='''
+				<button type="button" onclick="startActivity()">Start</button>
+				<div id="stopwatch">00:00:00</div>
+				<button type="button" onclick="stopClock()">Stop</button>
+				<button type="button" onclick="startClock()">Start</button>
+				<button type="button" onclick="resetClock()">Reset</button>'''
 		return f'''
 			<p>Name:{room['name']}</p>
 			<p>State:{room['state']}</p>
@@ -226,7 +231,8 @@ def join_room():
 	if request.method =="POST" and session.get("is_logged_in",False):
 		result=request.form
 		room_id=result["room_id"]
-		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("players").child(session['uid']).set({"name":session["name"]})
+		print(room_id,session['uid'],session['name'])
+		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("players").child(session['uid']).update({"name":session["name"]})
 		print(player)
 		return redirect(f'''/room/{room_id}''')
 @app.route("/kick",methods=["POST","GET"])
@@ -242,5 +248,13 @@ def kick():
 		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").child(session['uid']).set({"name":session["name"]})
 		
 		return '''<p></p>'''
+
+
+@app.route("/activity",methods=["POST","GET"])
+def activity_tick():
+	if request.method=="POST" and session.get("is_logged_in",False):
+		print(request.body)
+		return ''''''
+	return ''''''
 
 			

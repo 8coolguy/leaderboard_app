@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
-    
+    <script src="{{url_for('static', filename='index.js')}}"></script>
+    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
     <title>Leaderboard App</title>
 </head>
 <body>
@@ -19,14 +20,11 @@
     <div hx-get="/strava_login" hx-swap="outerHTML" hx-trigger="load"></div>
     {% if room_id %}
     <h2>Room: {{ room_id }}</h2>
-    <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load"></div>
+    <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load, every 500s"></div>
     {% else %}  
     <h2>Room:</h2>
     {% endif %}
     
-    
-    
-
-    
+    <button type="button" onclick="onClick()">Connect Heart Rate Monitor</button>
 </body>
 </html>
