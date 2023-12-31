@@ -30,14 +30,16 @@ def handle_activity_tick(data):
     global begin
     global tot
     global series
+    room_id=request.referrer.split("/")[-1]
     start=int(list(data.keys())[0])
+    player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(session['uid'])
+    player.child(str(start//1000)).set({"heartRate":data[str(start)]["heartRate"]})
     if begin==-1:
         begin=start
         tot=0
     tot+=data[str(start)]["heartRate"]
     series.append(data[str(start)]["heartRate"])
     delta = start-last_tick
-    print(delta/1000)
     print(round((tot/((len(series))))))
     
 
