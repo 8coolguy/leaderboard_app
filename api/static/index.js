@@ -9,12 +9,23 @@ var elapsedPause=0;
 function connectSocket(){
     socket=io({autoconnect:false});
     socket.connect();
-    socket.on("connect", function() {
+    socket.on("connect", function(res) {
+        socket.on('response', (msg) => {
+            console.log(msg);
+        });
         socket.emit("user_join", "Hello");
     })
-    
 }
+window.addEventListener("beforeunload", function (e) {
+    var confirmationMessage = "\o/";
+  
+    (e || window.event).returnValue = confirmationMessage;
+    socket.emit("user_leave");
+    return confirmationMessage;                            //Webkit, Safari, Chrome
+  });
+
 window.onload=connectSocket;
+
 
 function startActivity(){
     socket.emit("activity_start",Date.now().toString());

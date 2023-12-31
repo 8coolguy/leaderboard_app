@@ -7,16 +7,9 @@ from datetime import datetime,timedelta
 from download_data import get_api_values
 import time
 import random
-import pyrebase
-import os
 from events import socketio
-
-config={
-  "apiKey": os.getenv("apiKey"),
-  "authDomain": os.getenv("authDomain"),
-  "databaseURL": os.getenv("databaseURL"),
-  "storageBucket": os.getenv("storageBucket")
-}
+from extensions import firebase, auth, db
+from flask_socketio import send
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'super sdfsdfhsidfuhsijdfhskdjfskfhksfhkshfksdhfkjecret key'
@@ -25,11 +18,8 @@ htmx=HTMX(app)
 Session(app)
 socketio.init_app(app)
 s,ids=get_api_values()
-i=0
-#initialize firebase
-firebase = pyrebase.initialize_app(config)
-auth = firebase.auth()
-db = firebase.database()
+
+
 
 #Initialze person as dictionary
 person = {"is_logged_in": False, "name": "", "email": "", "uid": ""}
@@ -246,7 +236,6 @@ def kick():
 		
 		player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(uid).remove()
 		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").child(session['uid']).set({"name":session["name"]})
-		
 		return '''<p></p>'''
 
 
@@ -256,5 +245,3 @@ def activity_tick():
 		print(request.body)
 		return ''''''
 	return ''''''
-
-			

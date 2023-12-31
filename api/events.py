@@ -1,6 +1,8 @@
 from extensions import socketio
+from flask_socketio import emit,send,join_room,leave_room
 from flask import request,session
 from statistics import mean
+from extensions import db
 
 last_tick=0
 begin=-1
@@ -9,13 +11,19 @@ series=[]
 
 @socketio.on("connect")
 def handle_connect():
-    print("Connected!")
-
+    room_id=request.referrer.split("/")[-1]
+    join_room(room_id)
+    emit("response","Connected!"+session['name'],to=room_id)
 @socketio.on("user_join")
 def handle_user_join(username):
     user=session['name']
     print(f"User {username} {user} joined!")
-
+    send(f'''<p>{username}</p>''')
+@socketio.on("user_leave")
+def handle_user_leave():
+    room_id=request.referrer.split("/")[-1]
+    leave_room(room_id)
+    print(session['name']+" left.")
 @socketio.on("activity_tick")
 def handle_activity_tick(data):
     global last_tick
@@ -38,3 +46,15 @@ def handle_activity_tick(data):
 def handle_activity_start(start_time):
     #mark when activity started in current room and change state
     print("Activity Started",start_time)
+    room_id=request.referrer.split("/")[-1]
+    room=db.child("rooms").child("current_rooms").child(room_id)
+    if room.child("state").get().val()=="w":
+        room.child("rooms").child("current_rooms").child(room_id).update({"state":"s"})
+        
+@socketio.on("activity_end")
+def handle_activity_end(end_time):
+    print("Activity Ended",end_time) 
+    room_id=request.referrer.split("/")[-1]
+    room=db.child("rooms").child("current_rooms").child(room_id)
+    if room.child("state").get().val()=="s":
+        room.child("rooms").child("current_rooms").child(room_id).update({"state":"f"})
