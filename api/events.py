@@ -33,16 +33,16 @@ def handle_activity_tick(data):
     room_id=request.referrer.split("/")[-1]
     start=int(list(data.keys())[0])
     player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(session['uid'])
-    player.child(str(start//1000)).set({"heartRate":data[str(start)]["heartRate"]})
+    player.child(start//1000).set({"heartRate":data[str(start)]["heartRate"]})
     if begin==-1:
         begin=start
         tot=0
     tot+=data[str(start)]["heartRate"]
     series.append(data[str(start)]["heartRate"])
-    delta = start-last_tick
-    print(round((tot/((len(series))))))
+    # delta = start-last_tick
+    avg_heartrate=round((tot/((len(series)))))
     
-
+    db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).set({"avgHeartRate":avg_heartrate})
     last_tick=start
 @socketio.on("activity_start")
 def handle_activity_start(start_time):

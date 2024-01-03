@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request,session, redirect
+from flask import Flask, render_template, request, session, redirect
 from flask_cors import CORS
 from flask_htmx import HTMX, make_response
 from flask_session import Session
 from stravalib import Client
-from datetime import datetime,timedelta
+from datetime import datetime, timedelta
 from download_data import get_api_values
 import time
 import random
@@ -18,7 +18,6 @@ htmx=HTMX(app)
 Session(app)
 socketio.init_app(app)
 s,ids=get_api_values()
-
 
 
 #Initialze person as dictionary
@@ -80,6 +79,7 @@ def firebase_login():
 			
 			#Get the name of the user
 			session["name"] = user["displayName"] or email
+			db.child("users").child(session["uid"]).set({"name":session["name"]})
 			return redirect("/")
 		except Exception as e:
 			return f'<p>{str(e)}</p>'
@@ -95,7 +95,6 @@ def firebase_register():
 			#Create User
 			user = auth.create_user_with_email_and_password(email, password)
 			auth.send_email_verification(user['idToken'])
-			
 			return "<p>Success Login</p>"	
 		except Exception as e:
 			return f'<p>{str(e)}</p>'
@@ -239,9 +238,14 @@ def kick():
 		return '''<p></p>'''
 
 
-@app.route("/activity",methods=["POST","GET"])
-def activity_tick():
-	if request.method=="POST" and session.get("is_logged_in",False):
-		print(request.body)
-		return ''''''
-	return ''''''
+@app.route("/leaderboard",methods=["GET"])
+def leaderboard():
+	if request.method=="GET" and session.get("is_logged_in",False):
+		res=""
+		room_id=request.referrer.split('/')[-1]
+		leaderboard=db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").get().val()
+		for uid in leaderboard.keys():
+			user=db.child("users").child(uid).get().val()
+			res+=f'''<p>{user["name"]}: {leaderboard[uid]["avgHeartRate"]}</p>'''
+		return f'''<p>Leaderboard for{room_id}</p>'''+res
+	return '''<p>Whaaaat?</p>'''

@@ -24,5 +24,6 @@
     {% else %}  
     <h2>Room:</h2>
     {% endif %} 
-    <button type="button" onclick="onClick()">Connect Heart Rate Monitor</button>2
+    <button type="button" onclick="onClick()">Connect Heart Rate Monitor</button>
+    <div hx-get="/leaderboard" hx-trigger="load, every 3s" hx-swap="innerHTML"></div>
 </html>
