@@ -1,0 +1,6 @@
+@leaderboard_app_encoder_HostAddress = http://localhost:5101
+
+GET {{leaderboard_app_encoder_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

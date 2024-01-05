@@ -1,3 +1,8 @@
 *.pyc
 *.env
 api/flask_session/*
+*.vscode
+encoder/leaderboard_app_encoder/bin
+*.cache
+encoder/leaderboard_app_encoder/obj/**/
+
