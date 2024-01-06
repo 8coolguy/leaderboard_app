@@ -1,5 +1,7 @@
-var builder = WebApplication.CreateBuilder(args);
+using System;
+using Dynastream.Fit;
 
+var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -18,15 +20,17 @@ app.UseHttpsRedirection();
 
 var summaries = new[]
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+    "Freezing"
 };
 
 app.MapGet("/weatherforecast", () =>
 {
+    var startTime = new Dynastream.Fit.DateTime(System.DateTime.UtcNow);
+    Console.WriteLine(startTime.ToString());
     var forecast =  Enumerable.Range(1, 5).Select(index =>
         new WeatherForecast
         (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            DateOnly.FromDateTime(System.DateTime.Now.AddDays(index)),
             Random.Shared.Next(-20, 55),
             summaries[Random.Shared.Next(summaries.Length)]
         ))

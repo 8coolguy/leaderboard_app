@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
-    <script src="https://cdn.tailwindcss.com"></script>    
     <title>Leaderboard App</title>
 </head>
-<body>
-    <h1>Leaderboard App</h1>
-    <div hx-get="/hello" hx-swap="outerHTML" hx-trigger="load"></div>
-    <div hx-get="/strava_login" hx-swap="outerHTML" hx-trigger="load"></div>
-    <div hx-get="/session_user" hx-swap="outerHTML" hx-trigger="load"></div>
-    
-</body>
+    {% include 'header.html' without context %}
+    <body>
+        <h1>Leaderboard App</h1>
+        <div hx-get="/hello" hx-swap="outerHTML" hx-trigger="load"></div>
+        <div hx-get="/strava_login" hx-swap="outerHTML" hx-trigger="load"></div>
+        <div hx-get="/session_user" hx-swap="outerHTML" hx-trigger="load"></div> 
+    </body>
+    {% include 'footer.html' %}
 </html>

@@ -1,31 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
-    <script src="{{url_for('static', filename='index.js')}}"></script>
-    <link href="{{url_for('static', filename='output.css')}}" rel="stylesheet"> 
-    <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
-    <title>Leaderboard App</title>
-</head>
-<body>
-    
-    
-    <!-- <div hx-get="http://127.0.0.1:5000/" hx-swap="outerHTML" hx-trigger="click">
-        Control Click Me
-    </div> -->
-    
-    <h1>Leaderboard App</h1>
-    <h1 class="text-3xl font-bold underline text-clifford">Hello world!</h1>
-    <!-- <div hx-get="/strava_login" hx-swap="outerHTML" hx-trigger="load"></div> -->
-    {% if room_id %}
-    <h2>Room: {{ room_id }}</h2>
-    <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load, every 500s"></div>
-    {% else %}  
-    <h2>Room:</h2>
-    {% endif %} 
-    <button type="button" onclick="onClick()">Connect Heart Rate Monitor</button>
-    <div hx-get="/leaderboard" hx-trigger="load, every 500s" hx-swap="innerHTML"></div>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="https://unpkg.com/htmx.org@1.9.9" integrity="sha384-QFjmbokDn2DjBjq+fM+8LUIVrAgqcNW2s0PjAxHETgRn9l4fvX31ZxDxvwQnyMOX" crossorigin="anonymous"></script>
+        <script src="{{url_for('static', filename='index.js')}}"></script>
+        <link href="{{url_for('static', filename='output.css')}}" rel="stylesheet"> 
+        <script src="https://cdn.socket.io/4.6.0/socket.io.min.js" integrity="sha384-c79GN5VsunZvi+Q/WObgk2in0CbZsHnjEqvFxC5DxHn9lTfNce2WW6h2pH6u/kF+" crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/htmx.org/dist/ext/ws.js"></script>
+        <title>Leaderboard App</title>
+    </head>
+    {% include 'header.html' with context %}
+    <body>
+        
+        
+        <!-- <div hx-get="http://127.0.0.1:5000/" hx-swap="outerHTML" hx-trigger="click">
+            Control Click Me
+        </div> -->
+        
+        <h1>Leaderboard App</h1>
+        <h1 class="text-3xl font-bold underline text-clifford">Hello world!</h1>
+        <!-- <div hx-get="/strava_login" hx-swap="outerHTML" hx-trigger="load"></div> -->
+        {% if room_id %}
+        <h2>Room: {{ room_id }}</h2>
+        <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load, every 500s"></div>
+        {% else %}  
+        <h2>Room:</h2>
+        {% endif %} 
+        <button type="button" onclick="onClick()">Connect Heart Rate Monitor</button>
+        <div hx-get="/leaderboard" hx-trigger="load, every 500s" hx-swap="innerHTML"></div>
+    </body>
+    {% include 'footer.html' %}
 </html>

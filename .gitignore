@@ -5,4 +5,3 @@ api/flask_session/*
 encoder/leaderboard_app_encoder/bin
 *.cache
 encoder/leaderboard_app_encoder/obj/**/
-

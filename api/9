@@ -11,7 +11,6 @@ from events import socketio
 from extensions import firebase, auth, db
 from flask_socketio import send
 from pages import pages
-from components import components
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'super sdfsdfhsidfuhsijdfhskdjfskfhksfhkshfksdhfkjecret key'
@@ -22,12 +21,14 @@ socketio.init_app(app)
 s,ids=get_api_values()
 
 app.register_blueprint(pages)
-app.register_blueprint(components)
 
 #Initialze person as dictionary
 person = {"is_logged_in": False, "name": "", "email": "", "uid": ""}
 
 
+@app.route("/", methods=["GET"])
+def index():
+	return render_template("index.html")
 @app.route("/hello", methods=["GET"])
 def hello_world():
 	return "<p>Hello World</p>" 
@@ -188,6 +189,10 @@ def create_room():
 			return redirect('/') #1000 rooms filled need to figure out what max bandwidth would be.
 		print(res)
 		return redirect(f'''/room/{room_id}''')
+
+@app.route("/room/<int:room_id>",methods=["POST","GET"])
+def room(room_id):
+	return render_template("room.html", room_id=room_id)
 
 @app.route("/session_room/<int:room_id>",methods=["POST","GET"])
 def session_room(room_id):
