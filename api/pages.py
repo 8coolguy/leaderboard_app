@@ -18,7 +18,7 @@ def room(room_id):
 	return render_template("room.html", room_id=room_id)
 @pages.route("/login", methods=["GET"])
 def login():
-	return "Login Page"
+	return render_template("login.html")
 
 @pages.route("/signup", methods=["GET"])
 def signup():
