@@ -4,7 +4,7 @@ module.exports = {
   theme: {
     extend: {
         colors: {
-          clifford: '#da373d',
+          main: '#da373d',
         }
     }
   },

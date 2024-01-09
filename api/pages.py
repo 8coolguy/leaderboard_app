@@ -22,8 +22,7 @@ def login():
 
 @pages.route("/signup", methods=["GET"])
 def signup():
-	return "Signup Page"
-
+	return render_template("signup.html")
 @pages.route("/frogotpassword", methods=["GET"])
 def frogotpassword():
-	return "Frogot Password Page"
+	return render_template("frogotpassword.html")
