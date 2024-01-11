@@ -564,6 +564,10 @@ video {
   z-index: 20;
 }
 
+.z-10 {
+  z-index: 10;
+}
+
 .me-4 {
   margin-inline-end: 1rem;
 }
