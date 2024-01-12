@@ -244,8 +244,8 @@ def leaderboard():
 		res=""
 		room_id=request.referrer.split('/')[-1]
 		leaderboard=db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").get().val()
-		for uid in leaderboard.keys():
+		for i,uid in enumerate(leaderboard.keys()):
 			user=db.child("users").child(uid).get().val()
-			res+=f'''<p>{user["name"]}: {leaderboard[uid]["avgHeartRate"]}</p>'''
+			res+=f'''<p>{i}: {user["name"]}: {leaderboard[uid]["avgHeartRate"]}</p>'''
 		return f'''<p>Leaderboard for{room_id}</p>'''+res
 	return '''<p>Whaaaat?</p>'''
