@@ -16,8 +16,6 @@ c-create data stream to generate fit files for testing purpose
 -device accessibility   
 -room state   
 Update 1/2/24:
-I've got bits and pieces done on all of the components of the progect. I do need to get a speed sensor, cadence sensor, and test a trainer to improve the accessibility with different devices.   
-
-Before I do that I need to work on the encoder part of the project. Right now I have a example, I don't think it will be hardto convert that into a C# sever just need to better understand C# ecosystem.   
-
-I also have to work on the UI for leaderboards. Probably try to figma something up quickly. I want to finish before school starts, but unlikely considering I have delayed aquiring sensors and stuff.   
+I've got bits and pieces done on all of the components of the progect. I do need to get a speed sensor, cadence sensor, and test a trainer to improve the accessibility with different devices. Before I do that I need to work on the encoder part of the project. Right now I have a example, I don't think it will be hardto convert that into a C# sever just need to better understand C# ecosystem. I also have to work on the UI for leaderboards. Probably try to figma something up quickly. I want to finish before school starts, but unlikely considering I have delayed aquiring sensors and stuff.   
+Update 4/6/24:   
+Worked on the visuals need to work on the data flow. Need to pull out the trainer and start cranking the numbers.

@@ -5,7 +5,15 @@ var started=false;
 var startTime;
 var stopWatchInterval;
 var elapsedPause=0;
+var mile = 0;
 
+const x_pos = 100;//x pos of circle
+const y_pos = 100;//y pos of circle
+const r = 50;//radius od circle
+const m = 10;//mod of small circle
+
+
+window.addEventListener("time_change",(event) => {drawCircle(mile);mile+=.01;});
 function connectSocket(){
     socket=io({autoconnect:false});
     socket.connect();
@@ -83,6 +91,7 @@ function updateClock(){
     var hours = Math.floor(elapsedTime / 1000 / 60 / 60); // calculate hours
     var time = pad(hours)+":"+pad(minutes)+":"+pad(seconds);
     document.getElementById("stopwatch").innerHTML=time;
+    window.dispatchEvent(new Event("time_change"));
 }
 /**
  * Starts the Activty Clock
@@ -114,10 +123,35 @@ function resetClock(){
     elapsedPause = 0;
     document.getElementById("stopwatch").innerHTML="00:00:00";
 }
+
+
+
 function drawCircle(miles){
+    const canvas = document.querySelector("canvas");
+    miles = Math.floor(miles * 100) / 100;
+    
 
+    if (!canvas.getContext)
+        return;
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    var theta = miles * (2 * Math.PI);
 
-    document.getElementById("circle").innerHTML="00:00:00";
+    ctx.beginPath();
+    ctx.arc(x_pos, y_pos, r, 0, 2 * Math.PI);
+    ctx.stroke();
+
+    ctx.fillStyle = "#008000"; //green
+    ctx.beginPath();
+    ctx.arc(x_pos+r*Math.sin(theta),y_pos-r*Math.cos(theta), r/m, 0, 2 * Math.PI);
+    ctx.stroke();
+    ctx.fill();
+
+    ctx.font = "24px Arial";
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'black';
+    ctx.fillText(miles, x_pos, y_pos+6);//add one fourth of the text size
 }
 /**
  * Pads a zero
