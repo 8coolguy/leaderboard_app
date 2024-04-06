@@ -2,6 +2,12 @@
 Creating a leaderboard app that creates virtual rooms and after completion uploads to Strava.
 Using Flask, HTMX, SocketIO and  ...
 
+## How to start local version?   
+- Need to install dependencies and then run following commands   
+```source ../keys.env```   
+```conda activate <env>```   
+```flask run -p 8000```
+
 ## Todo:
 c-login and user profile  
 c-create data stream to generate fit files for testing purpose   

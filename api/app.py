@@ -12,6 +12,7 @@ from extensions import firebase, auth, db
 from flask_socketio import send
 from pages import pages
 from components import components
+
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'super sdfsdfhsidfuhsijdfhskdjfskfhksfhkshfksdhfkjecret key'
@@ -189,32 +190,7 @@ def create_room():
 		print(res)
 		return redirect(f'''/room/{room_id}''')
 
-@app.route("/session_room/<int:room_id>",methods=["POST","GET"])
-def session_room(room_id):
-	if request.method=="GET":
-		kicked=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").get()
-		if kicked.val() and session['uid'] in kicked.val(): return make_response(redirect="/")
-		room=db.child("rooms").child("current_rooms").child(str(room_id)).get().val()
-		players=''''''
-		for player in room['players'].keys():
-			# print(player,room['players'][player])
-			players+=f'''<div id=res_{player}>'''
-			players+=f'''<p>{room['players'][player]['name']}</p>'''
-			if session['uid']==room['host']:
-				players+=f'''<button hx-post="/kick" hx-target='#res_{player}' uid={player}> Kick</button>'''
-			players+='</div>'
-		if session['uid']==room['host']:
-			players+='''
-				<button type="button" onclick="startActivity()">Start</button>
-				<div id="stopwatch">00:00:00</div>
-				<button type="button" onclick="stopClock()">Stop</button>
-				<button type="button" onclick="startClock()">Start</button>
-				<button type="button" onclick="resetClock()">Reset</button>'''
-		return f'''
-			<p>Name:{room['name']}</p>
-			<p>State:{room['state']}</p>
-			<p>Players:</p>
-			'''+players
+
 @app.route("/join_room",methods=["POST","GET"])
 def join_room():
 	if request.method =="POST" and session.get("is_logged_in",False):
@@ -236,16 +212,3 @@ def kick():
 		player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(uid).remove()
 		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").child(session['uid']).set({"name":session["name"]})
 		return '''<p></p>'''
-
-
-@app.route("/leaderboard",methods=["GET"])
-def leaderboard():
-	if request.method=="GET" and session.get("is_logged_in",False):
-		res=""
-		room_id=request.referrer.split('/')[-1]
-		leaderboard=db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").get().val()
-		for i,uid in enumerate(leaderboard.keys()):
-			user=db.child("users").child(uid).get().val()
-			res+=f'''<p>{i}: {user["name"]}: {leaderboard[uid]["avgHeartRate"]}</p>'''
-		return f'''<p>Leaderboard for{room_id}</p>'''+res
-	return '''<p>Whaaaat?</p>'''

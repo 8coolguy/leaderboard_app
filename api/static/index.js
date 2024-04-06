@@ -29,6 +29,7 @@ window.onload=connectSocket;
 
 function startActivity(){
     socket.emit("activity_start",Date.now().toString());
+    //delete this button from room
     startClock();
 }
 function heartRateChange(event){
@@ -112,6 +113,11 @@ function resetClock(){
     } // stop the interval
     elapsedPause = 0;
     document.getElementById("stopwatch").innerHTML="00:00:00";
+}
+function drawCircle(miles){
+
+
+    document.getElementById("circle").innerHTML="00:00:00";
 }
 /**
  * Pads a zero
