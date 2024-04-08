@@ -7,6 +7,13 @@ var stopWatchInterval;
 var elapsedPause=0;
 var mile = 0;
 
+var cumulativeWheelRevolutions = 0;
+var lastWheelEventTime = 0;
+var cumulativeCrankRevolutions = 0;
+var lastCrankEventTime = 0;
+
+var temp;
+
 const x_pos = 100;//x pos of circle
 const y_pos = 100;//y pos of circle
 const r = 50;//radius od circle
@@ -46,6 +53,52 @@ function heartRateChange(event){
     // console.log('currentHeartRate:', currentHeartRate,Date.now().toString());
     socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
 }
+function cScChange(event){
+    const values = event.target.value;
+    // console.log("-> "+(event.target.value.getUint8(0, true)>>> 0).toString(2)); //characteristics flags
+    var offset = 0;
+    const flags = values.getUint8(offset,true);
+    console.log(flags);
+    offset += 1; // UINT8 = 8 bits = 1 byte
+
+    // we have to check the flags' 0th bit to see if C1 field exists 
+    if ((flags & 1) != 0) {
+        temp = values.getUint32(offset,true);
+        var deltaRev = temp - cumulativeWheelRevolutions;
+        cumulativeWheelRevolutions = temp;
+        offset += 4; // UINT32 = 32 bits = 4 bytes
+        
+        temp = values.getUint16(offset,true);
+        var deltaWheelTime = temp - lastWheelEventTime;
+        lastWheelEventTime = temp;
+        offset += 2; // UINT16 = 16 bits = 2 bytes
+    }
+
+    // we have to check the flags' 1st bit to see if C2 field exists 
+    if ((flags & 2) != 0) {
+        temp = values.getUint16(offset,true);
+        var deltaCrankRevs = temp - cumulativeCrankRevolutions;
+        cumulativeCrankRevolutions = temp;
+        offset += 2;
+        
+        temp = values.getUint16(offset,true);
+        var deltaCrankTime = temp - lastCrankEventTime;
+        lastCrankEventTime = temp;
+        offset += 2;
+    }
+    
+    // console.log("Delta Wheel Revs: ",deltaRev);
+    // console.log("Delta Wheel Time: ",deltaWheelTime);
+    console.log("Delta Wheel Time: ",deltaRev/deltaWheelTime*60*1024*60*0.001310472);//.,002109
+    console.log("Delta Crank Time: ",deltaCrankRevs/deltaCrankTime*60*1024);
+    
+    console.log("0 Cum_Wheel_Rev :", cumulativeWheelRevolutions);
+    console.log("1 LastwheelUpdte :", lastWheelEventTime);
+    console.log("2 Cum. Cranks :", cumulativeCrankRevolutions);
+    console.log("3 LastCrankEventTime :", lastCrankEventTime);
+    // console.log('currentSpeed:', currentSpeed,Date.now().toString());
+    //socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
+}
 function onClick() {
     console.log(socket);
     console.log('Requesting Bluetooth Device...');
@@ -73,6 +126,40 @@ function onClick() {
         this.characteristic = characteristics[0];
         return this.characteristic.startNotifications().then(_ => {
             this.characteristic.addEventListener('characteristicvaluechanged',this.heartRateChange.bind(this));
+        });
+    })
+    .catch(error => {
+        console.log('Argh! ' + error);
+    });
+}
+
+function onClick2() {
+    console.log(socket);
+    console.log('Requesting Bluetooth Device...');
+    navigator.bluetooth.requestDevice({filters: [{services: ["cycling_speed_and_cadence"]}]})
+    .then(device => {
+      console.log('Connecting to GATT Server...');
+      return device.gatt.connect();
+    })
+    .then(server => {
+        console.log('Getting Service...');
+        return server.getPrimaryService("cycling_speed_and_cadence");
+    })
+    .then(service => {
+        console.log('Getting Characteristics...');
+      
+        // Get all characteristics that match this UUID.
+        return service.getCharacteristics("csc_measurement");
+      
+        // Get all characteristics.
+        return service.getCharacteristics();
+    })
+    .then(characteristics => {
+        // console.log(characteristics[0]);
+        //console.log('> Characteristics: ' + characteristics.map(c => c.uuid).join('\n' + ' '.repeat(19)));
+        this.characteristic = characteristics[0];
+        return this.characteristic.startNotifications().then(_ => {
+            this.characteristic.addEventListener('characteristicvaluechanged',this.cScChange.bind(this));
         });
     })
     .catch(error => {
