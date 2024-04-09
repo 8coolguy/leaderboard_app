@@ -47,12 +47,6 @@ function startActivity(){
     //delete this button from room
     startClock();
 }
-function heartRateChange(event){
-    const value = event.target.value;
-    const currentHeartRate = value.getUint8(1);
-    // console.log('currentHeartRate:', currentHeartRate,Date.now().toString());
-    socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
-}
 function cScChange(event){
     const values = event.target.value;
     // console.log("-> "+(event.target.value.getUint8(0, true)>>> 0).toString(2)); //characteristics flags
@@ -100,41 +94,11 @@ function cScChange(event){
     //socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
 }
 function onClick() {
-    console.log(socket);
-    console.log('Requesting Bluetooth Device...');
-    navigator.bluetooth.requestDevice({filters: [{services: ["heart_rate"]}]})
-    .then(device => {
-      console.log('Connecting to GATT Server...');
-      return device.gatt.connect();
-    })
-    .then(server => {
-        console.log('Getting Service...');
-        return server.getPrimaryService("heart_rate");
-    })
-    .then(service => {
-        console.log('Getting Characteristics...');
-      
-        // Get all characteristics that match this UUID.
-        return service.getCharacteristics("heart_rate_measurement");
-      
-        // Get all characteristics.
-        return service.getCharacteristics();
-    })
-    .then(characteristics => {
-        console.log(characteristics[0])
-        console.log('> Characteristics: ' + characteristics.map(c => c.uuid).join('\n' + ' '.repeat(19)));
-        this.characteristic = characteristics[0];
-        return this.characteristic.startNotifications().then(_ => {
-            this.characteristic.addEventListener('characteristicvaluechanged',this.heartRateChange.bind(this));
-        });
-    })
-    .catch(error => {
-        console.log('Argh! ' + error);
-    });
+    const s = new Sensor(0,socket);
+    s.connect();
 }
 
 function onClick2() {
-    console.log(socket);
     console.log('Requesting Bluetooth Device...');
     navigator.bluetooth.requestDevice({filters: [{services: ["cycling_speed_and_cadence"]}]})
     .then(device => {
@@ -212,7 +176,9 @@ function resetClock(){
 }
 
 
-
+/**
+ * Circle Visual for Distance
+ */
 function drawCircle(miles){
     const canvas = document.querySelector("canvas");
     miles = Math.floor(miles * 100) / 100;
