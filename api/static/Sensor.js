@@ -1,5 +1,5 @@
 class Sensor{
-    constructor(type,socket){
+    constructor(type,socket,id){
         if(type==0){
             var service = "heart_rate";
             var characteristic = "heart_rate_measurement";
@@ -12,12 +12,15 @@ class Sensor{
         this.type = type;
         this.service = service;
         this.characteristic = characteristic;
+        this.id=id;
     }
     connect(){
         console.log('Requesting Bluetooth Device...');
+        return new Promise((res,rej)=>{
         navigator.bluetooth.requestDevice({filters: [{services: [this.service]}]})
         .then(device => {
             console.log('Connecting to GATT Server...');
+            this.name = device.name;
             return device.gatt.connect();
         })
         .then(server => {
@@ -36,13 +39,17 @@ class Sensor{
         .then(characteristics => {
             //console.log('> Characteristics: ' + characteristics.map(c => c.uuid).join('\n' + ' '.repeat(19)));
             this.deviceCharacteristic = characteristics[0];
-            return this.deviceCharacteristic.startNotifications().then(_ => {
+            this.deviceCharacteristic.startNotifications().then(_ => {
                 this.deviceCharacteristic.addEventListener('characteristicvaluechanged',this.handler().bind(this));
+                res();
             });
+
         })
         .catch(error => {
+            rej();
             console.log('Argh! ' + error);
         });
+    })
     }
     handler(){
         if(this.type==0)

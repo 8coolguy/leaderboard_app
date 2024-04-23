@@ -33,7 +33,15 @@
             </div>
             {% endif %} 
             <div class="flex flex-col justify-center items-center">
-                <div hx-get="/leaderboard" hx-trigger="load, every 500s" hx-swap="innerHTML"></div>
+                <div hx-get="/remove" hx-trigger="load, every 500s" hx-swap="innerHTML"></div>
+                <div class="flex flex-col justify-center items-center bg-amber-200 border-[6px] rounded-md tw-border-solid border-black">
+                    <h1 class="text-xl">Devices</h1>
+                    <div id="devices" class="grid grid-cols-1 gap-4">
+
+                    </div>
+                    <button hx-get="/deviceForm" hx-target="#devices" hx-swap="afterbegin" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" type="button">Add Device</button>
+
+                </div>
                 <button type="button" onclick="onClick()">Connect Heart Rate Monitor</button>
                 <button type="button" onclick="onClick2()">Connect Speed Sensor</button>
             </div>

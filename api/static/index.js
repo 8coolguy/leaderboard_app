@@ -6,7 +6,7 @@ var startTime;
 var stopWatchInterval;
 var elapsedPause=0;
 var mile = 0;
-
+var devices =[];
 var cumulativeWheelRevolutions = 0;
 var lastWheelEventTime = 0;
 var cumulativeCrankRevolutions = 0;
@@ -93,9 +93,20 @@ function cScChange(event){
     // console.log('currentSpeed:', currentSpeed,Date.now().toString());
     //socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
 }
-function onClick() {
-    const s = new Sensor(0,socket);
-    s.connect();
+async function addDevice(e) {
+    e.preventDefault();
+    
+    console.log(devices);
+    const s =new Sensor(e.target[0].value,socket,devices.length);
+    devices.push(s);
+    s.connect().then(()=>{
+        while(e.target.firstChild && e.target.removeChild(e.target.firstChild));
+        e.target.setHTML(`<div>${s.name}</div>`)
+    })
+    
+    //s.name
+   
+    
 }
 
 function onClick2() {
@@ -215,4 +226,11 @@ function pad(i){
     }else{
         return i.toString()
     }
+}
+
+/**
+ * Deletes a current form element.
+ */
+function clearForm(event){
+    console.log(event);
 }

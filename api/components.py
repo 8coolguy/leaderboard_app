@@ -7,6 +7,17 @@ components =Blueprint('components',__name__,template_folder="templates")
 
 #
 #
+# This function return an empty string
+# DONE: 1
+#
+# TODO: 0
+#
+@components.route("/remove",methods=["GET"])
+def remove():
+    return ''''''
+
+#
+#
 # This function tests if the endpoints in file work
 # DONE: 1
 #
@@ -66,5 +77,27 @@ def leaderboard():
             res+=f'''<p>{i}: {user["name"]}: {leaderboard[uid]["avgHeartRate"]}</p>'''
         return f'''<p>Leaderboard for{room_id}</p>'''+res
     return '''<p>Whaaaat?</p>'''
+
+@components.route("/deviceForm",methods=["GET"])
+def deviceForm():
+    return '''<form class="flex" onSubmit=addDevice(event)>
+    
+        <div class="p-1">
+            <div class="mt-2">
+                <select id="type" name="type" class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:max-w-xs sm:text-sm sm:leading-6">
+                    <option value=0>Heart Rate</option>
+                    <option value=1>Cycling/Speed</option>
+                </select>
+            </div>
+        </div>
+        <div class="grid grid-cols-1">
+            <button class="bg-green-500 hover:bg-green-700 text-white font-bold h-5 w-5 rounded" type="submit">✓</button>
+            <button hx-get="/remove" hx-target="closest form" hx-swap="outerHTML" class="bg-red-500 hover:bg-red-700 text-white font-bold h-5 w-5 rounded" type="button">x</button>
+        </div>
+        
+    </form>'''
+
+
+
 
 
