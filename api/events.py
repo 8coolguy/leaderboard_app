@@ -35,9 +35,9 @@ def handle_activity_tick(data):
     player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(session['uid'])
     
     if "heartRate" in data[str(start)]: player.child(start//1000).set({"heartRate":data[str(start)]["heartRate"]})
-    if "speed" in data[str(start)]: player.child(start//1000).set({"speed":data[str(start)]["speed"]})
-    if "cadence" in data[str(start)]: player.child(start//1000).set({"cadence":data[str(start)]["cadence"]})
-
+    # if "speed" in data[str(start)]: player.child(start//1000).set({"speed":data[str(start)]["speed"]})
+    # if "cadence" in data[str(start)]: player.child(start//1000).set({"cadence":data[str(start)]["cadence"]})
+    return
     if begin==-1:
         begin=start
         tot=0

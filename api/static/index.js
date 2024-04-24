@@ -33,12 +33,10 @@ function connectSocket(){
 }
 window.addEventListener("beforeunload", function (e) {
     var confirmationMessage = "\o/";
-  
     (e || window.event).returnValue = confirmationMessage;
     socket.emit("user_leave");
     return confirmationMessage;                            //Webkit, Safari, Chrome
   });
-
 window.onload=connectSocket;
 
 
@@ -47,99 +45,18 @@ function startActivity(){
     //delete this button from room
     startClock();
 }
-function cScChange(event){
-    const values = event.target.value;
-    // console.log("-> "+(event.target.value.getUint8(0, true)>>> 0).toString(2)); //characteristics flags
-    var offset = 0;
-    const flags = values.getUint8(offset,true);
-    console.log(flags);
-    offset += 1; // UINT8 = 8 bits = 1 byte
 
-    // we have to check the flags' 0th bit to see if C1 field exists 
-    if ((flags & 1) != 0) {
-        temp = values.getUint32(offset,true);
-        var deltaRev = temp - cumulativeWheelRevolutions;
-        cumulativeWheelRevolutions = temp;
-        offset += 4; // UINT32 = 32 bits = 4 bytes
-        
-        temp = values.getUint16(offset,true);
-        var deltaWheelTime = temp - lastWheelEventTime;
-        lastWheelEventTime = temp;
-        offset += 2; // UINT16 = 16 bits = 2 bytes
-    }
-
-    // we have to check the flags' 1st bit to see if C2 field exists 
-    if ((flags & 2) != 0) {
-        temp = values.getUint16(offset,true);
-        var deltaCrankRevs = temp - cumulativeCrankRevolutions;
-        cumulativeCrankRevolutions = temp;
-        offset += 2;
-        
-        temp = values.getUint16(offset,true);
-        var deltaCrankTime = temp - lastCrankEventTime;
-        lastCrankEventTime = temp;
-        offset += 2;
-    }
-    
-    // console.log("Delta Wheel Revs: ",deltaRev);
-    // console.log("Delta Wheel Time: ",deltaWheelTime);
-    console.log("Delta Wheel Time: ",deltaRev/deltaWheelTime*60*1024*60*0.001310472);//.,002109
-    console.log("Delta Crank Time: ",deltaCrankRevs/deltaCrankTime*60*1024);
-    
-    console.log("0 Cum_Wheel_Rev :", cumulativeWheelRevolutions);
-    console.log("1 LastwheelUpdte :", lastWheelEventTime);
-    console.log("2 Cum. Cranks :", cumulativeCrankRevolutions);
-    console.log("3 LastCrankEventTime :", lastCrankEventTime);
-    // console.log('currentSpeed:', currentSpeed,Date.now().toString());
-    //socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
-}
-async function addDevice(e) {
+function addDevice(e) {
     e.preventDefault();
-    
-    console.log(devices);
     const s =new Sensor(e.target[0].value,socket,devices.length);
+    while(e.target.firstChild && e.target.removeChild(e.target.firstChild));
+    e.target.setHTMLUnsafe(`<div>Connecting...</div>`)
     devices.push(s);
+    const button = "<button hx-boost=\"true\" hx-get=\"remove\" hx-target=\"closest form\" hx-swap=\"outerHTML\" class=\"bg-red-500 hover:bg-red-700 text-white font-bold h-5 w-5 rounded\" type=\"button\">x</button>";
     s.connect().then(()=>{
         while(e.target.firstChild && e.target.removeChild(e.target.firstChild));
-        e.target.setHTML(`<div>${s.name}</div>`)
+        e.target.setHTMLUnsafe(`<div>${s.name}</div>${button}`)
     })
-    
-    //s.name
-   
-    
-}
-
-function onClick2() {
-    console.log('Requesting Bluetooth Device...');
-    navigator.bluetooth.requestDevice({filters: [{services: ["cycling_speed_and_cadence"]}]})
-    .then(device => {
-      console.log('Connecting to GATT Server...');
-      return device.gatt.connect();
-    })
-    .then(server => {
-        console.log('Getting Service...');
-        return server.getPrimaryService("cycling_speed_and_cadence");
-    })
-    .then(service => {
-        console.log('Getting Characteristics...');
-      
-        // Get all characteristics that match this UUID.
-        return service.getCharacteristics("csc_measurement");
-      
-        // Get all characteristics.
-        return service.getCharacteristics();
-    })
-    .then(characteristics => {
-        // console.log(characteristics[0]);
-        //console.log('> Characteristics: ' + characteristics.map(c => c.uuid).join('\n' + ' '.repeat(19)));
-        this.characteristic = characteristics[0];
-        return this.characteristic.startNotifications().then(_ => {
-            this.characteristic.addEventListener('characteristicvaluechanged',this.cScChange.bind(this));
-        });
-    })
-    .catch(error => {
-        console.log('Argh! ' + error);
-    });
 }
 
 /**
@@ -163,7 +80,6 @@ function startClock(){
         startTime=Date.now()-elapsedPause;
         stopWatchInterval=setInterval(updateClock,1000);
     }
-    
 }
 /**
  * Stops activity Clokc
@@ -232,5 +148,4 @@ function pad(i){
  * Deletes a current form element.
  */
 function clearForm(event){
-    console.log(event);
 }
