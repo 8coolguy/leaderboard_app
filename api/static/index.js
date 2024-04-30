@@ -1,4 +1,3 @@
-console.log("Hello World");
 var socket;
 var started=false;
 //Global Variable for the stopwatch

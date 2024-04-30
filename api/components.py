@@ -1,5 +1,6 @@
 from extensions import firebase, auth, db
 from flask import Blueprint, request, session
+from flask_htmx import HTMX, make_response
 from helper import getStopWatch
 
 
@@ -41,16 +42,18 @@ def session_room(room_id):
         kicked=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").get()
         if kicked.val() and session['uid'] in kicked.val(): return make_response(redirect="/")
         room=db.child("rooms").child("current_rooms").child(str(room_id)).get().val()
-
-        # Generates the players and kick buttons
-        # for player in room['players'].keys():
-        #     res+=f'''<div id=res_{player}>'''
-        #     res+=f'''<p>{room['players'][player]['name']}</p>'''
-        #     if session['uid']==room['host']:
-        #         res+=f'''<button hx-post="/kick" hx-target='#res_{player}' uid={player}> Kick</button>'''
-        #     res+='</div>'
-
+    
+        
         if session['uid']==room['host']:
+            # Generates the players and kick buttons
+            for player in room['leaderboard'].keys():
+                if player==room['host']:continue
+                res+=f'''<div class="flex flex-col" id=res_{player}>'''
+                if session['uid']==room['host']:
+                    res+=f'''<button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" hx-post="/kick" hx-target='#res_{player}' uid={player}>Kick {db.child("users").child(player).child('name').get().val()}</button>'''
+                res+='</div>'
+
+        
             res+=getStopWatch()
         return f'''<div class="flex justify-center"><div class="flex flex-col bg-amber-200 justify-center border-[6px] rounded-md tw-border-solid border-black items-center space-y-3 p-4">
             <h1 class="text-3xl">{room['name']}#{room_id}</h1>
@@ -67,16 +70,45 @@ def session_room(room_id):
 @components.route("/leaderboard",methods=["GET"])
 def leaderboard():
     room_id=request.referrer.split('/')[-1]
-    res=''''''
+    res='''<table class="table-auto border-separate border-spacing-2 bg-amber-200 rounded border-black border-[6px]">
+        <thead>
+            <tr>
+            <th>Player</th>
+            <th>Avg. Heart Rate</th>
+            <th>Avg. Speed</th>
+            <th>Avg. Cadence</th>
+            <th>Distance</th>
+            </tr>
+        </thead>
+        <tbody>'''
     if not session.get("is_logged_in",False):
         pass
     if request.method=="GET":
         leaderboard=db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").get().val()
         for i,uid in enumerate(leaderboard.keys()):
             user=db.child("users").child(uid).get().val()
-            res+=f'''<p>{i}: {user["name"]}: {leaderboard[uid]["avgHeartRate"]}</p>'''
+            res+='''<tr>'''
+            res+=f'''<td>{user["name"]}</td>'''
+            res+=f'''<td> {leaderboard[uid].get("avgHeartRate","--")}</td>'''
+            res+=f'''<td> {leaderboard[uid].get("avgSpeed","--")}</td>'''
+            res+=f'''<td> {leaderboard[uid].get("avgCadence","--")}</td>'''
+            res+=f'''<td> {leaderboard[uid].get("distance","--")}</td>'''
+            res+='''</tr>'''
+        res+='''</tbody>'''
         return f'''<p>Leaderboard for{room_id}</p>'''+res
     return '''<p>Whaaaat?</p>'''
+@components.route("/deviceDiv",methods=["GET"])
+def deviceDiv():
+    room_id=request.referrer.split('/')[-1]
+    host=db.child("rooms").child("current_rooms").child(str(room_id)).child('host').get().val()
+    if session['uid']==host: return ''''''
+    return '''<div class="flex flex-col justify-center items-center bg-amber-200 border-[6px] rounded-md tw-border-solid border-black">
+            <h1 class="text-xl">Devices</h1>
+            <div id="devices" class="grid grid-cols-1 gap-4">
+
+            </div>
+            <button hx-get="/deviceForm" hx-target="#devices" hx-swap="afterbegin" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" type="button">Add Device</button>
+        </div>'''
 
 @components.route("/deviceForm",methods=["GET"])
 def deviceForm():

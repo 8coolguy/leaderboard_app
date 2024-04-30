@@ -17,37 +17,56 @@ def handle_connect():
 @socketio.on("user_join")
 def handle_user_join(username):
     user=session['name']
+    room_id=request.referrer.split("/")[-1]
+    db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":1})
     print(f"User {username} {user} joined!")
     send(f'''<p>{username}</p>''')
 @socketio.on("user_leave")
 def handle_user_leave():
     room_id=request.referrer.split("/")[-1]
+    db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":0})
     leave_room(room_id)
     print(session['name']+" left.")
-@socketio.on("activity_tick")
-def handle_activity_tick(data):
-    global last_tick
-    global begin
-    global tot
-    global series
-    room_id=request.referrer.split("/")[-1]
-    start=int(list(data.keys())[0])
-    player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(session['uid'])
+# @socketio.on("activity_tick")
+# def handle_activity_tick(data):
     
-    if "heartRate" in data[str(start)]: player.child(start//1000).set({"heartRate":data[str(start)]["heartRate"]})
-    # if "speed" in data[str(start)]: player.child(start//1000).set({"speed":data[str(start)]["speed"]})
-    # if "cadence" in data[str(start)]: player.child(start//1000).set({"cadence":data[str(start)]["cadence"]})
-    return
-    if begin==-1:
-        begin=start
-        tot=0
-    tot+=data[str(start)]["heartRate"]
-    series.append(data[str(start)]["heartRate"])
-    # delta = start-last_tick
-    avg_heartrate=round((tot/((len(series)))))
+#     room_id=request.referrer.split("/")[-1]
     
-    db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).set({"avgHeartRate":avg_heartrate})
-    last_tick=start
+#     if db.child("rooms").child("current_rooms").child(room_id).child('state').get().val() != 's':
+#         # print("Hasnt Started")
+#         return
+#     player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(session["uid"]).get()
+#     player_leaderboard = db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).get().val()
+    
+
+#     start = int(list(data.keys())[0])
+    
+#     response = dict()
+#     if "heartRate" in data[str(start)]: 
+#         player.child(start//1000).set({"heartRate":data[str(start)]["heartRate"]})
+#         totalMetric = player_leaderboard.get("totalHeartRate",0)
+#         totalCount = player_leaderboard.get("totalHeartRateCount",0)
+#         response["heartRate"] = data[str(start)]["heartRate"]
+#         totalCount +=1
+#         totalMetric += data[str(start)]["heartRate"]
+#     if "speed" in data[str(start)]:
+#         player.child(start//1000).set({"speed":data[str(start)]["speed"]})
+#         totalMetric = player_leaderboard.get("totalSpeed",0)
+#         totalCount = player_leaderboard.get("totalSpeedCount",0)
+#         response["heartRate"] = data[str(start)]["heartRate"]
+#         totalCount +=1
+#         totalMetric += data[str(start)]["heartRate"]
+#     if "cadence" in data[str(start)]: 
+#         player.child(start//1000).set({"cadence":data[str(start)]["cadence"]})
+#     if response:
+#         db.child("rooms").child("current_rooms").child(room_id).child("players").child(session["uid"]).child(start//1000).set(response)
+    
+#     avg_heartrate=totalMetric/totalCount
+#     db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({
+#         "avgHeartRate":avg_heartrate,
+#         "totalHeartRate":totalMetric,
+#         "totalHeartRateCount":totalCount
+#         })
 @socketio.on("activity_start")
 def handle_activity_start(start_time):
     #mark when activity started in current room and change state

@@ -62,6 +62,8 @@ class Sensor{
         const currentHeartRate = value.getUint8(1);
         console.log('currentHeartRate:', Date.now().toString(), currentHeartRate);
         this.socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
+        
+        document.getElementById("hr").innerHTML = currentHeartRate;
     }
     cScChange(event){
         var offset = 0;
@@ -102,8 +104,20 @@ class Sensor{
 
         
         // if(speed!=NaN) console.log('speed:',Date.now().toString(),speed);
+        if(speed!=Nan){
+            document.getElementById("speed").innerHTML = speed;
+            socket.emit("activity_tick",{[Date.now().toString()]:{speed:speed}});
+        }else{
+            document.getElementById("speed").innerHTML = "--";
+        }
         // if(cadence!=NaN) console.log('cadence:',Date.now().toString(),cadence);
-        // if(speed!=NaN)socket.emit("activity_tick",{[Date.now().toString()]:{speed:speed}});
-        // if(cadence!=NaN)socket.emit("activity_tick",{[Date.now().toString()]:{cadence:cadence}});
+        // if(speed!=NaN)
+        // if(cadence!=NaN)
+        if(cadence!=Nan){
+            document.getElementById("cadence").innerHTML = cadence;
+            socket.emit("activity_tick",{[Date.now().toString()]:{cadence:cadence}});
+        }else{
+            document.getElementById("cadence").innerHTML = "--";
+        }
     }
 }

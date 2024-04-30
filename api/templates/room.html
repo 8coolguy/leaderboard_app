@@ -29,20 +29,43 @@
                 <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load, every 500s">
                     
                 </div>
-                <canvas class="border border-black" width="200" height="200" id="canvas"></canvas>
-            </div>
-            {% endif %} 
-            <div class="flex flex-col justify-center items-center">
-                <div hx-get="/remove" hx-trigger="load, every 500s" hx-swap="innerHTML"></div>
-                <div class="flex flex-col justify-center items-center bg-amber-200 border-[6px] rounded-md tw-border-solid border-black">
-                    <h1 class="text-xl">Devices</h1>
-                    <div id="devices" class="grid grid-cols-1 gap-4">
-
+                <canvas class="" width="200" height="200" id="canvas"></canvas>
+                <div class="rounded border-[6px] border-black font-mono">
+                    <div class="flex-col  border border-black">
+                        <div class="grid grid-cols-1 p-3">
+                            <p id = "distance"></p>
+                            <p>miles</p></div>
+                        </div>
+                        <div class="grid grid-cols-3 ">
+                            <div class="border border-black p-3">
+                                <p id = "cadence"></p>
+                                <p>rpm</p></div>
+                            <div class="border border-black p-3">
+                                <p id = "hr"></p>
+                                <p>bpm</p></div>
+                            <div class="border border-black p-3">
+                                <p id = "speed"></p>
+                                <p>mph</p>
+                            </div>
+                        </div>
                     </div>
-                    <button hx-get="/deviceForm" hx-target="#devices" hx-swap="afterbegin" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" type="button">Add Device</button>
+                </div>
+                <div class="flex flex-col justify-center items-center p-4 gap-8">
+                    <div hx-get="/leaderboard" hx-trigger="load, every 500s" hx-swap="innerHTML"></div>
+                    <div hx-get="/deviceDiv" hx-trigger="load" hx-swap="outerHTML"></div>
+
+                    <!-- <div class="flex flex-col justify-center items-center bg-amber-200 border-[6px] rounded-md tw-border-solid border-black">
+                        <h1 class="text-xl">Devices</h1>
+                        <div id="devices" class="grid grid-cols-1 gap-4">
+    
+                        </div>
+                        <button hx-get="/deviceForm" hx-target="#devices" hx-swap="afterbegin" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded" type="button">Add Device</button>
+                    </div> -->
 
                 </div>
             </div>
+            {% endif %} 
+            
         </div>
     </body>
     {% include 'footer.html' %}
