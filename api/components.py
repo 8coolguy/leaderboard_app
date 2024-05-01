@@ -41,24 +41,27 @@ def session_room(room_id):
     if request.method=="GET":
         kicked=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").get()
         if kicked.val() and session['uid'] in kicked.val(): return make_response(redirect="/")
-        room=db.child("rooms").child("current_rooms").child(str(room_id)).get().val()
+        host=db.child("rooms").child("current_rooms").child(str(room_id)).child("host").get().val()
+        players = room=db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").shallow().get().val()
+        name=db.child("rooms").child("current_rooms").child(str(room_id)).child("name").get().val()
+        state=db.child("rooms").child("current_rooms").child(str(room_id)).child("state").get().val()
     
         
-        if session['uid']==room['host']:
+        if session['uid']==host:
             # Generates the players and kick buttons
-            for player in room['leaderboard'].keys():
-                if player==room['host']:continue
+            for player in players:
+                if player==host:continue
                 res+=f'''<div class="flex flex-col" id=res_{player}>'''
-                if session['uid']==room['host']:
+                if session['uid']==host:
                     res+=f'''<button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" hx-post="/kick" hx-target='#res_{player}' uid={player}>Kick {db.child("users").child(player).child('name').get().val()}</button>'''
                 res+='</div>'
 
         
             res+=getStopWatch()
         return f'''<div class="flex justify-center"><div class="flex flex-col bg-amber-200 justify-center border-[6px] rounded-md tw-border-solid border-black items-center space-y-3 p-4">
-            <h1 class="text-3xl">{room['name']}#{room_id}</h1>
+            <h1 class="text-3xl">{name}#{room_id}</h1>
             <p class="text-gray-600">Pin: {room_id}</p>
-            <p>State: {room['state']}</p>''' + res + '''</div></div>'''
+            <p>State: {state}</p>''' + res + '''</div></div>'''
  
 # 
 #
@@ -95,7 +98,7 @@ def leaderboard():
             res+=f'''<td> {leaderboard[uid].get("distance","--")}</td>'''
             res+='''</tr>'''
         res+='''</tbody>'''
-        return f'''<p>Leaderboard for{room_id}</p>'''+res
+        return res
     return '''<p>Whaaaat?</p>'''
 @components.route("/deviceDiv",methods=["GET"])
 def deviceDiv():
@@ -126,6 +129,32 @@ def deviceForm():
             <button hx-get="/remove" hx-target="closest form" hx-swap="outerHTML" class="bg-red-500 hover:bg-red-700 text-white font-bold h-5 w-5 rounded" type="button">x</button>
         </div>
     </form>'''
+@components.route("/monitor",methods=["GET"])
+def monitor():
+    room_id=request.referrer.split('/')[-1]
+    host=db.child("rooms").child("current_rooms").child(str(room_id)).child('host').get().val()
+    if session['uid']==host: return ''''''
+    return '''
+    <div class="rounded border-[6px] border-black font-mono">
+        <div class="flex-col border border-black">
+            <div class="grid grid-cols-1 p-3">
+                <p id = "distance"></p>
+                <p>miles</p></div>
+            </div>
+            <div class="grid grid-cols-3 ">
+                <div class="border border-black p-3">
+                    <p id = "cadence"></p>
+                    <p>rpm</p></div>
+                <div class="border border-black p-3">
+                    <p id = "hr"></p>
+                    <p>bpm</p></div>
+                <div class="border border-black p-3">
+                    <p id = "speed"></p>
+                    <p>mph</p>
+                </div>
+            </div>
+        </div>
+    </div>'''
 
 
 

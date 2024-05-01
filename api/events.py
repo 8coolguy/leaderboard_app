@@ -4,11 +4,6 @@ from flask import request,session
 from statistics import mean
 from extensions import db
 
-last_tick=0
-begin=-1
-tot=0
-series=[]
-
 @socketio.on("connect")
 def handle_connect():
     room_id=request.referrer.split("/")[-1]
@@ -27,46 +22,53 @@ def handle_user_leave():
     db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":0})
     leave_room(room_id)
     print(session['name']+" left.")
-# @socketio.on("activity_tick")
-# def handle_activity_tick(data):
+@socketio.on("activity_tick")
+def handle_activity_tick(data):
     
-#     room_id=request.referrer.split("/")[-1]
-    
-#     if db.child("rooms").child("current_rooms").child(room_id).child('state').get().val() != 's':
-#         # print("Hasnt Started")
-#         return
-#     player=db.child("rooms").child("current_rooms").child(room_id).child("players").child(session["uid"]).get()
-#     player_leaderboard = db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).get().val()
-    
+    room_id=request.referrer.split("/")[-1]
 
-#     start = int(list(data.keys())[0])
+    #returns if room is not in a started state
+    if db.child("rooms").child("current_rooms").child(room_id).child('state').get().val() != 's':
+        return
     
-#     response = dict()
-#     if "heartRate" in data[str(start)]: 
-#         player.child(start//1000).set({"heartRate":data[str(start)]["heartRate"]})
-#         totalMetric = player_leaderboard.get("totalHeartRate",0)
-#         totalCount = player_leaderboard.get("totalHeartRateCount",0)
-#         response["heartRate"] = data[str(start)]["heartRate"]
-#         totalCount +=1
-#         totalMetric += data[str(start)]["heartRate"]
-#     if "speed" in data[str(start)]:
-#         player.child(start//1000).set({"speed":data[str(start)]["speed"]})
-#         totalMetric = player_leaderboard.get("totalSpeed",0)
-#         totalCount = player_leaderboard.get("totalSpeedCount",0)
-#         response["heartRate"] = data[str(start)]["heartRate"]
-#         totalCount +=1
-#         totalMetric += data[str(start)]["heartRate"]
-#     if "cadence" in data[str(start)]: 
-#         player.child(start//1000).set({"cadence":data[str(start)]["cadence"]})
-#     if response:
-#         db.child("rooms").child("current_rooms").child(room_id).child("players").child(session["uid"]).child(start//1000).set(response)
+    player_leaderboard = db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).get().val()
+    start = int(list(data.keys())[0])
     
-#     avg_heartrate=totalMetric/totalCount
-#     db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({
-#         "avgHeartRate":avg_heartrate,
-#         "totalHeartRate":totalMetric,
-#         "totalHeartRateCount":totalCount
-#         })
+    response = dict()
+    leaderboardResponse = dict()
+    print(data)
+    if "heartRate" in data[str(start)]: 
+        totalHr = player_leaderboard.get("totalHeartRate",0)
+        totalHrCount = player_leaderboard.get("totalHeartRateCount",0)
+        response["heartRate"] = data[str(start)]["heartRate"]
+        totalHrCount +=1
+        totalHr += data[str(start)]["heartRate"]
+        leaderboardResponse["avgHeartRate"]=round(totalHr/totalHrCount,2)
+        leaderboardResponse["totalHeartRate"]=totalHr
+        leaderboardResponse["totalHeartRateCount"]=totalHrCount
+    if "speed" in data[str(start)]:
+        distance = player_leaderboard.get("distance",0)
+        totalSpeed = player_leaderboard.get("totalSpeed",0)
+        totalSpeedCount = player_leaderboard.get("totalSpeedCount",0)
+        response["speed"] = data[str(start)]["speed"]
+        totalSpeedCount +=1
+        totalSpeed += data[str(start)]["speed"]
+        leaderboardResponse["avgSpeed"]=round(totalSpeed/totalSpeedCount,2)
+        leaderboardResponse["totalSpeed"]=totalSpeed
+        leaderboardResponse["totalSpeedCount"]=totalSpeedCount
+        leaderboardResponse["distance"] = distance + data[str(start)]["distance"]
+    if "cadence" in data[str(start)]: 
+        totalCad = player_leaderboard.get("totalCad",0)
+        totalCadCount = player_leaderboard.get("totalCadCount",0)
+        response["cadence"] = data[str(start)]["cadence"]
+        totalCadCount +=1
+        totalCad += data[str(start)]["cadence"]
+        leaderboardResponse["avgCadence"]=round(totalCad/totalCadCount,2)
+        leaderboardResponse["totalCad"]=totalCad
+        leaderboardResponse["totalCadCount"]=totalCadCount
+    if response and leaderboardResponse:
+        db.child("rooms").child("current_rooms").child(room_id).child("players").child(session["uid"]).child(start//1000).update(response)
+        db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update(leaderboardResponse)
 @socketio.on("activity_start")
 def handle_activity_start(start_time):
     #mark when activity started in current room and change state

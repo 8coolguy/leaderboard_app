@@ -98,7 +98,7 @@ class Sensor{
             this.lastCrankEventTime = temp;
             offset += 2;
         }
-        
+        const distance = deltaRev*0.001310472;
         const speed = deltaRev/deltaWheelTime*60*1024*60*0.001310472;
         const cadence = deltaCrankRevs/deltaCrankTime*60*1024;
 
@@ -106,7 +106,7 @@ class Sensor{
         // if(speed!=NaN) console.log('speed:',Date.now().toString(),speed);
         if(speed!=Nan){
             document.getElementById("speed").innerHTML = speed;
-            socket.emit("activity_tick",{[Date.now().toString()]:{speed:speed}});
+            socket.emit("activity_tick",{[Date.now().toString()]:{speed:speed,distance:distance}});
         }else{
             document.getElementById("speed").innerHTML = "--";
         }
