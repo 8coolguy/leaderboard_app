@@ -20,6 +20,7 @@ const m = 10;//mod of small circle
 
 
 window.addEventListener("time_change",(event) => {drawCircle(mile);mile+=.01;});
+window.addEventListener("start",(arg) => {drawCircle(mile);mile+=.01;});
 function connectSocket(){
     socket=io({autoconnect:false});
     socket.connect();
@@ -32,6 +33,9 @@ function connectSocket(){
     socket.on("start", (arg) => {
         startTime =arg;
         startClock();
+    });
+    socket.on("end", (arg) => {
+        window.location.href = "google.com";
     });
 }
 
@@ -46,6 +50,9 @@ window.onload=connectSocket;
 
 function startActivity(){
     socket.emit("activity_start",Date.now().toString());
+}
+function stopActivity(){
+    socket.emit("activity_end",Date.now().toString());
 }
 
 function addDevice(e) {

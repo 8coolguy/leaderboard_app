@@ -91,4 +91,7 @@ def handle_activity_end(end_time):
     room_id=request.referrer.split("/")[-1]
     room=db.child("rooms").child("current_rooms").child(room_id)
     if room.child("state").get().val()=="s":
-        room.child("rooms").child("current_rooms").child(room_id).update({"state":"f"})
+        db.child("rooms").child("current_rooms").child(room_id).update({"state":"f"})
+        db.child("rooms").child("current_rooms").child(room_id).update({"end":end_time})
+        emit("end","hello",to=room_id)
+

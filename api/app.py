@@ -12,6 +12,8 @@ from extensions import firebase, auth, db
 from flask_socketio import send
 from pages import pages
 from components import components
+import urllib.request
+
 MAX_ROOMS = 10
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -38,6 +40,8 @@ def strava_login():
 	client=Client()
 	authorize_url = client.authorization_url(client_id=ids, redirect_uri='http://127.0.0.1:5000/post_strava_login', scope=["read","activity:write"])
 	return f'<a href="{authorize_url}" class="button">Post Activity</a>'
+def getFitFile(rid,uid):
+	urllib.request.urlretrieve(f'http://localhost:5101/weatherforecast/{rid}/{uid}', f'{rid}_{uid}.fit')
 
 @app.route("/post_strava_login",methods=["GET"])
 def post_strava_login():

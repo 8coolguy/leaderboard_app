@@ -1,5 +1,15 @@
+using EncoderFunctions;
 using System;
+using FireSharp;
+using FireSharp.Config;
+using FireSharp.Interfaces;
+using FireSharp.Response;
 using Dynastream.Fit;
+
+IFirebaseConfig fc = new FirebaseConfig(){
+    AuthSecret = Environment.GetEnvironmentVariable("apiKey"),
+    BasePath = Environment.GetEnvironmentVariable("databaseURL")
+};
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -23,19 +33,28 @@ var summaries = new[]
     "Freezing"
 };
 
-app.MapGet("/weatherforecast", () =>
+app.MapGet("/weatherforecast/{rid}/{uid}", (string rid,string uid) =>
 {
+   
     var startTime = new Dynastream.Fit.DateTime(System.DateTime.UtcNow);
+    IFirebaseClient client=new FireSharp.FirebaseClient(fc);
+    
+    FirebaseResponse response = client.Get("rooms/current_rooms/1/name");
+    String res =response.ResultAs<String>();
+    Console.WriteLine(rid,uid);
+    Console.WriteLine(res);
     Console.WriteLine(startTime.ToString());
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(System.DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
+    Encoder.CreateTimeBasedActivity();
+    // var forecast =  Enumerable.Range(1, 5).Select(index =>
+    //     new WeatherForecast
+    //     (
+    //         DateOnly.FromDateTime(System.DateTime.Now.AddDays(index)),
+    //         Random.Shared.Next(-20, 55),
+    //         summaries[Random.Shared.Next(summaries.Length)]
+    //     ))
+    //     .ToArray();
+    return Results.File("/Users/8coolguy/Documents/leaderboard_app/encoder/leaderboard_app_encoder/ActivityEncodeRecipe.fit");
+    // return "success";
 })
 .WithName("GetWeatherForecast")
 .WithOpenApi();
