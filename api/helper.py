@@ -1,4 +1,4 @@
-def getStopWatch():
+def getStopWatchControl():
     return '''
             <div id="stopwatch">00:00:00</div>
             <div class="flex">
@@ -11,3 +11,5 @@ def getStopWatch():
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" type="button" onclick="resetClock()">Lap/Reset</button>
             </div>'''
             # make the lap/reset button change based on what state it is.2
+def getStopWatch():
+    return '''<div id="stopwatch">00:00:00</div>'''

@@ -29,7 +29,12 @@ function connectSocket(){
         });
         socket.emit("user_join", "Hello");
     })
+    socket.on("start", (arg) => {
+        startTime =arg;
+        startClock();
+    });
 }
+
 window.addEventListener("beforeunload", function (e) {
     var confirmationMessage = "\o/";
     (e || window.event).returnValue = confirmationMessage;
@@ -41,8 +46,6 @@ window.onload=connectSocket;
 
 function startActivity(){
     socket.emit("activity_start",Date.now().toString());
-    //delete this button from room
-    startClock();
 }
 
 function addDevice(e) {
@@ -76,7 +79,8 @@ function updateClock(){
  */
 function startClock(){
     if(!stopWatchInterval){
-        startTime=Date.now()-elapsedPause;
+        
+        //startTime=Date.now()-elapsedPause;
         stopWatchInterval=setInterval(updateClock,1000);
     }
 }

@@ -1,7 +1,7 @@
 from extensions import firebase, auth, db
 from flask import Blueprint, request, session
 from flask_htmx import HTMX, make_response
-from helper import getStopWatch
+from helper import getStopWatch, getStopWatchControl
 
 
 components =Blueprint('components',__name__,template_folder="templates")
@@ -55,8 +55,8 @@ def session_room(room_id):
                 if session['uid']==host:
                     res+=f'''<button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" hx-post="/kick" hx-target='#res_{player}' uid={player}>Kick {db.child("users").child(player).child('name').get().val()}</button>'''
                 res+='</div>'
-
-        
+            res+=getStopWatchControl()
+        else:
             res+=getStopWatch()
         return f'''<div class="flex justify-center"><div class="flex flex-col bg-amber-200 justify-center border-[6px] rounded-md tw-border-solid border-black items-center space-y-3 p-4">
             <h1 class="text-3xl">{name}#{room_id}</h1>
