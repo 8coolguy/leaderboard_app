@@ -1,15 +1,27 @@
 using EncoderFunctions;
+using System.Collections.Generic; 
 using System;
+using Newtonsoft.Json;
+using Dynastream.Fit;
+using FireSharp.Extensions;
+using Firebase.Database;
+using Firebase.Database.Query;
+using Nest;
+using Microsoft.AspNetCore.Authentication;
+
 using FireSharp;
 using FireSharp.Config;
 using FireSharp.Interfaces;
 using FireSharp.Response;
-using Dynastream.Fit;
 
-IFirebaseConfig fc = new FirebaseConfig(){
-    AuthSecret = Environment.GetEnvironmentVariable("apiKey"),
-    BasePath = Environment.GetEnvironmentVariable("databaseURL")
-};
+Console.WriteLine("Server Start..."); 
+var auth = Environment.GetEnvironmentVariable("apiKey"); // your app secret
+// var firebaseClient = new FirebaseClient(
+//   Environment.GetEnvironmentVariable("databaseURL"),
+//   new FirebaseOptions
+//   {
+//     AuthTokenAsyncFactory = () => Task.FromResult(auth) 
+//   });
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
@@ -28,23 +40,49 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing"
+IFirebaseConfig fc = new FirebaseConfig(){
+    AuthSecret = Environment.GetEnvironmentVariable("apiKey"),
+    BasePath = Environment.GetEnvironmentVariable("databaseURL")
 };
 
-app.MapGet("/weatherforecast/{rid}/{uid}", (string rid,string uid) =>
+app.MapGet("/weatherforecast/{rid}/{uid}",  (string rid,string uid) =>
 {
-   
-    var startTime = new Dynastream.Fit.DateTime(System.DateTime.UtcNow);
+    Console.WriteLine(rid);
+    Console.WriteLine(uid);
+    // var startTime = new Dynastream.Fit.DateTime(System.DateTime.UtcNow);
     IFirebaseClient client=new FireSharp.FirebaseClient(fc);
+    FirebaseResponse response = client.Get("rooms/past_rooms/"+rid+"/players/"+uid);
+    var json = response.Body;
+    FirebaseResponse response2 = client.Get("rooms/past_rooms/"+rid+"/start");
+    var startTime = response2.Body;
     
-    FirebaseResponse response = client.Get("rooms/current_rooms/1/name");
-    String res =response.ResultAs<String>();
-    Console.WriteLine(rid,uid);
-    Console.WriteLine(res);
-    Console.WriteLine(startTime.ToString());
-    Encoder.CreateTimeBasedActivity();
+    dynamic result = JsonConvert.DeserializeObject(json);
+    
+    
+
+    // var name = firebaseClient
+    //     .Child("rooms")
+    //     .Child("past_rooms")
+    //     .Child(rid)
+    //     .Child("name")
+    //     .
+    // Console.WriteLine(name);
+       
+    // var dinos = await firebaseClient
+    //     .Child("rooms")
+    //     .Child("past_rooms")
+    //     .Child(rid)
+    //     .Child("players")
+    //     .Child(uid)
+    //     .OnceAsync<Encoder>();
+    //     // .Once<Encoder.Ticks>();
+    // Console.WriteLine(dinos.Count);
+    
+    
+    
+    
+    //Console.WriteLine(startTime.ToString());
+    Encoder.CreateTimeBasedActivity(result,Encoder.ToDateTime(startTime));
     // var forecast =  Enumerable.Range(1, 5).Select(index =>
     //     new WeatherForecast
     //     (

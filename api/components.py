@@ -2,10 +2,14 @@ from extensions import firebase, auth, db
 from flask import Blueprint, request, session
 from flask_htmx import HTMX, make_response
 from helper import getStopWatch, getStopWatchControl
+from datetime import datetime
+from dateutil import tz
 
 
 components =Blueprint('components',__name__,template_folder="templates")
-
+# METHOD 2: Auto-detect zones:
+from_zone = tz.tzutc()
+to_zone = tz.tzlocal()
 #
 #
 # This function return an empty string
@@ -42,7 +46,7 @@ def session_room(room_id):
         kicked=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").get()
         if kicked.val() and session['uid'] in kicked.val(): return make_response(redirect="/")
         host=db.child("rooms").child("current_rooms").child(str(room_id)).child("host").get().val()
-        players = room=db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").shallow().get().val()
+        players =db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").shallow().get().val()
         name=db.child("rooms").child("current_rooms").child(str(room_id)).child("name").get().val()
         state=db.child("rooms").child("current_rooms").child(str(room_id)).child("state").get().val()
     
@@ -95,7 +99,7 @@ def leaderboard():
             res+=f'''<td> {leaderboard[uid].get("avgHeartRate","--")}</td>'''
             res+=f'''<td> {leaderboard[uid].get("avgSpeed","--")}</td>'''
             res+=f'''<td> {leaderboard[uid].get("avgCadence","--")}</td>'''
-            res+=f'''<td> {leaderboard[uid].get("distance","--")}</td>'''
+            res+=f'''<td> {round(leaderboard[uid].get("distance",0),2)}</td>'''
             res+='''</tr>'''
         res+='''</tbody>'''
         return res
@@ -104,7 +108,7 @@ def leaderboard():
 def deviceDiv():
     room_id=request.referrer.split('/')[-1]
     host=db.child("rooms").child("current_rooms").child(str(room_id)).child('host').get().val()
-    if session['uid']==host: return ''''''
+    # if session['uid']==host: return ''''''
     return '''<div class="flex flex-col justify-center items-center bg-amber-200 border-[6px] rounded-md tw-border-solid border-black">
             <h1 class="text-xl">Devices</h1>
             <div id="devices" class="grid grid-cols-1 gap-4">
@@ -133,7 +137,7 @@ def deviceForm():
 def monitor():
     room_id=request.referrer.split('/')[-1]
     host=db.child("rooms").child("current_rooms").child(str(room_id)).child('host').get().val()
-    if session['uid']==host: return ''''''
+    # if session['uid']==host: return ''''''
     return '''
     <div class="rounded border-[6px] border-black font-mono">
         <div class="flex-col border border-black">
@@ -155,6 +159,58 @@ def monitor():
             </div>
         </div>
     </div>'''
+@components.route("/results/<string:room_id>",methods=["GET"])
+def results(room_id):
+    leaderboard = db.child("rooms").child("past_rooms").child(room_id).child("leaderboard").order_by_child("distance").limit_to_first(3).get().val()
+    res='''<table class="table-auto">
+        <thead>
+            <tr>
+            <th>Place</th>
+            <th>Player</th>
+            <th>Distance</th>
+            </tr>
+        </thead>
+        <tbody>'''
+    for i,player in enumerate(leaderboard):
+        res+='''<tr>'''
+        res+=f'''<td> {i+1}</td>'''
+        res+=f'''<td> {db.child("users").child(player).child("name").get().val()}</td>'''
+        res+=f'''<td> {leaderboard[player].get('distance',0)}</td>'''
+        res+='''</tr>'''
+    res+='''</tbody>'''
+    stats = db.child("rooms").child("past_rooms").child(room_id).child("leaderboard").child(session['uid']).get().val()
+    name =db.child("rooms").child("past_rooms").child(room_id).child("name").get().val()
+    statDiv=f''''''
+    statDiv+=f'''<div class="flex flex-col p-3"><p class="font-bold">Heart Rate</p><p>{stats.get("avgHeartRate","--")}</p></div>'''
+    statDiv+=f'''<div class="flex flex-col p-3"><p class="font-bold">Distance</p><p>{stats.get("distance","--")}</p></div>'''
+    statDiv+=f'''<div class="flex flex-col p-3"><p class="font-bold">Cadence</p><p>{stats.get("avgCadence","--")}</p></div>'''
+    statDiv+=f'''<div class="flex flex-col p-3"><p class="font-bold">Speed</p><p>{stats.get("avgSpeed","--")}</p></div>'''
+
+    buttonDiv=''''''
+    buttonDiv+=f'''<button hx-get="/strava_login" hx-swap="outerHTML" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded" >Upload</button>'''
+    return f'''<div class="justify-center p-5 border-separate border-spacing-2 bg-amber-200 rounded border-black border-[6px]">
+        <h1 class="text-3xl">{name}</h1>
+        <div class="flex justify-center p-3">{statDiv}</div>
+        {res}
+        <div class="flex justify-center p-3">{buttonDiv}</div>
+    </div>'''
+@components.route("/history",methods=["GET"])
+def history():
+    res = f''''''
+    uid =session['uid']
+    history = db.child("users").child(uid).child("history").get().val()
+    for key in history:
+        name = db.child("rooms").child("past_rooms").child(history[key]).child("name").get().val()
+        print(history[key])
+        timestamp = db.child("rooms").child("past_rooms").child(history[key]).child("start").get().val()
+        d = datetime.fromtimestamp(int(timestamp)//1000)
+        sd = d.strftime('%B %d,%Y %I:%M %p')
+        res+=f'''<p onclick="location.href='/history/{history[key]}'">{name} on {sd}</p>'''
+    return res
+
+        
+    
+    
 
 
 

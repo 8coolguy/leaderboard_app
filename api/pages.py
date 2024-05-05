@@ -16,6 +16,11 @@ def room(room_id):
 	if not session.get("is_logged_in",False):
 		return redirect('login')
 	return render_template("room.html", room_id=room_id)
+@pages.route("/history/<string:room_id>",methods=["POST","GET"])
+def history(room_id):
+	if not session.get("is_logged_in",False):
+		return redirect('login')
+	return render_template("history.html", room_id=room_id)
 @pages.route("/login", methods=["GET"])
 def login():
 	return render_template("login.html")

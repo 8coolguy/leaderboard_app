@@ -9,8 +9,10 @@
 
   <ItemGroup>
     <PackageReference Include="Dynastream.Fit.Portable.dll" Version="1.0.1" />
+    <PackageReference Include="FirebaseDatabase.net" Version="4.2.0" />
     <PackageReference Include="FireSharp" Version="2.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.0" />
+    <PackageReference Include="NEST.JsonNetSerializer" Version="7.17.5" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
   </ItemGroup>
 

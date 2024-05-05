@@ -7,19 +7,24 @@
         <div class="flex min-h-full items-center flex-col justify-center px-6 py-12 lg:px-8">
             <div class="w-full bg-slate-100 rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 ">
                 <div hx-get="/session_user" hx-swap="outerHTML" hx-trigger="load"></div> 
-            <div class="px-10 pb-5" >
-                <form class="flex flex-col" action="/create_room" method="POST">
-                    <label class="block text-sm font-medium leading-6 text-gray-900" >Make Room:</label>
-                    <input id="make" class="fadeIn second block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" name="name" placeholder="Room Name">
-                    <input type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded fadeIn fourth" value="Make Room">
-                </form>
-                <form class="flex flex-col" action="/join_room" method="POST">
-                    <label class="block text-sm font-medium leading-6 text-gray-900">Join Room:</label>
-                    <input id="join" class="fadeIn second block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" name="room_id" placeholder="Room Name">
-                    <input type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded fadeIn fourth" value="Join Room">
-                </form>
-            </div>
+                <div class="px-10 pb-5" >
+                    <form class="flex flex-col" action="/create_room" method="POST">
+                        <label class="i block text-sm font-medium leading-6 text-gray-900" >Make Room:</label>
+                        <input id="make" class="fadeIn second block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" name="name" placeholder="Room Name">
+                        <input type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded fadeIn fourth" value="Make Room">
+                    </form>
+                    <form class="flex flex-col" action="/join_room" method="POST">
+                        <label class="block text-sm font-medium leading-6 text-gray-900">Join Room:</label>
+                        <input id="join" class="fadeIn second block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" name="room_id" placeholder="Room Name">
+                        <input type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded fadeIn fourth" value="Join Room">
+                    </form>
+                </div>
             
+            </div>
+        </div>
+        <div class="flex min-h-full items-center flex-col justify-center px-6 py-12 lg:px-8">
+            <div class="w-full bg-slate-100 rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 ">
+                <div hx-get="/history" hx-swap="outerHTML" hx-trigger="load"></div> 
             </div>
         </div>
     </body>

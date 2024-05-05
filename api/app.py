@@ -37,15 +37,27 @@ def hello_world():
 
 @app.route("/strava_login",methods=["GET"])
 def strava_login():
+	room_id=request.referrer.split('/')[-1]
+	uid=session['uid']
+	
 	client=Client()
-	authorize_url = client.authorization_url(client_id=ids, redirect_uri='http://127.0.0.1:5000/post_strava_login', scope=["read","activity:write"])
-	return f'<a href="{authorize_url}" class="button">Post Activity</a>'
-def getFitFile(rid,uid):
-	urllib.request.urlretrieve(f'http://localhost:5101/weatherforecast/{rid}/{uid}', f'{rid}_{uid}.fit')
+	authorize_url = client.authorization_url(client_id=ids, redirect_uri=f'http://127.0.0.1:8000/post_strava_login', scope=["read","activity:write"],state=room_id)
+	buttonDiv=''''''
+	buttonDiv+=f'''<a href="{authorize_url}" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded" >You Sure?</a>'''
+	return buttonDiv
+
+def getFitFile(room_id,uid):
+	urllib.request.urlretrieve(f'http://localhost:5101/weatherforecast/{room_id}/{uid}', f'{room_id}_{uid}.fit')
 
 @app.route("/post_strava_login",methods=["GET"])
 def post_strava_login():
-	code=request.args.get("code")
+	
+	code = request.args.get("code")
+	room_id = request.args.get("state")
+	uid = session['uid']
+	name = db.child("rooms").child("past_rooms").child(room_id).child("name").get().val()
+	getFitFile(room_id,uid)
+	
 	client=Client()	
 	token_response = client.exchange_code_for_token(client_id=ids, client_secret=s, code=code)
 	
@@ -55,17 +67,18 @@ def post_strava_login():
 	client.access_token = token_response['access_token']
 
 	try:
-		f=open("activity.fit",mode="rb")
+		f=open( f'{room_id}_{uid}.fit',mode="rb")
 		fit_file=f.read()
 		activity=client.upload_activity(
-			name="Test Activity 3",
+			name=name,
 			activity_file=fit_file,
 			data_type="fit",
 			activity_type="Ride"
 		)
+		print(activity.status)
 		f.close()
-		return "<p>Success</p>"
-	except:
+		return redirect("/")
+	except Exception as e:
 		return f'<p>{str(e)}</p>'
 		
 @app.route("/firebase_login",methods=["POST","GET"])
@@ -85,7 +98,7 @@ def firebase_login():
 			
 			#Get the name of the user
 			session["name"] = user["displayName"] or email
-			db.child("users").child(session["uid"]).set({"name":session["name"]})
+			db.child("users").child(session["uid"]).update({"name":session["name"]})
 			return redirect("/")
 		except Exception as e:
 			return f'<p>{str(e)}</p>'

@@ -19,12 +19,19 @@ def handle_connect():
 def handle_user_join(username):
     user=session['name']
     room_id=request.referrer.split("/")[-1]
+    if not str(room_id) in db.child("rooms").child("current_rooms").shallow().get().val(): return redirect(f'''/''')
     db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":1})
     print(f"User {username} {user} joined!")
-    # send(f'''<p>{username}</p>''')
+    room=db.child("rooms").child("current_rooms").child(room_id)
+    if room.child("state").get().val()=="s":
+        distance = db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).child("distance").get().val()
+        if not distance: distance =0
+        emit("distance",distance,broadcast=False)
+    
 @socketio.on("user_leave")
 def handle_user_leave():
     room_id=request.referrer.split("/")[-1]
+    if not str(room_id) in db.child("rooms").child("current_rooms").shallow().get().val(): return redirect(f'''/''')
     db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":0})
     leave_room(room_id)
     print(session['name']+" left.")
@@ -56,16 +63,17 @@ def handle_activity_tick(data):
         totalSpeed = player_leaderboard.get("totalSpeed",0)
         totalSpeedCount = player_leaderboard.get("totalSpeedCount",0)
         response["speed"] = data[str(start)]["speed"]
+        response["distance"] = distance + data[str(start)]["distance"]
         totalSpeedCount +=1
-        totalSpeed += data[str(start)]["speed"]
+        totalSpeed += data[str(start)].get("speed",0)
         leaderboardResponse["avgSpeed"]=round(totalSpeed/totalSpeedCount,2)
         leaderboardResponse["totalSpeed"]=totalSpeed
         leaderboardResponse["totalSpeedCount"]=totalSpeedCount
-        leaderboardResponse["distance"] = distance + data[str(start)]["distance"]
+        leaderboardResponse["distance"] = response["distance"] 
     if "cadence" in data[str(start)]: 
         totalCad = player_leaderboard.get("totalCad",0)
         totalCadCount = player_leaderboard.get("totalCadCount",0)
-        response["cadence"] = data[str(start)]["cadence"]
+        response["cadence"] = data[str(start)].get("cadence",0)
         totalCadCount +=1
         totalCad += data[str(start)]["cadence"]
         leaderboardResponse["avgCadence"]=round(totalCad/totalCadCount,2)
@@ -91,7 +99,24 @@ def handle_activity_end(end_time):
     room_id=request.referrer.split("/")[-1]
     room=db.child("rooms").child("current_rooms").child(room_id)
     if room.child("state").get().val()=="s":
-        db.child("rooms").child("current_rooms").child(room_id).update({"state":"f"})
-        db.child("rooms").child("current_rooms").child(room_id).update({"end":end_time})
-        emit("end","hello",to=room_id)
+        # db.child("rooms").child("current_rooms").child(room_id).update({"state":"f"})
+        # db.child("rooms").child("current_rooms").child(room_id).update({"end":end_time})
+        # get past room id 
+        idf = db.child("rooms").child("current_rooms").child(room_id).child("id").get().val()
+        
+        #save history for all the players
+        players =db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").shallow().get().val()
+        for player in players:db.child("users").child(player).child("history").push(idf)
+        # get current room data
+        db.child("rooms").child("current_rooms").child(room_id).child("id").remove()
+        room_data = db.child("rooms").child("current_rooms").child(room_id).get().val()
+        # #update past room and delete current room
+        db.child("rooms").child("past_rooms").child(idf).update(room_data)
+        db.child("rooms").child("current_rooms").child(room_id).remove()
+
+        
+        
+        emit("end",f'/history/{idf}',to=room_id)
+
+
 

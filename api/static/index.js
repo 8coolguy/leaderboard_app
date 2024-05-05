@@ -1,4 +1,5 @@
 var socket;
+var miles =0;
 var started=false;
 //Global Variable for the stopwatch
 var startTime;
@@ -19,8 +20,8 @@ const r = 50;//radius od circle
 const m = 10;//mod of small circle
 
 
-window.addEventListener("time_change",(event) => {drawCircle(mile);mile+=.01;});
-window.addEventListener("start",(arg) => {drawCircle(mile);mile+=.01;});
+window.addEventListener("time_change",(event) =>{ miles+=event.detail;console.log(miles); drawCircle(miles);});
+// window.addEventListener("start",(arg) => {);
 function connectSocket(){
     socket=io({autoconnect:false});
     socket.connect();
@@ -35,7 +36,11 @@ function connectSocket(){
         startClock();
     });
     socket.on("end", (arg) => {
-        window.location.href = "google.com";
+        window.location.href = arg;
+    });
+    socket.on("distance", (arg) => {
+        miles = arg;
+        drawCircle(miles);
     });
 }
 
@@ -79,7 +84,6 @@ function updateClock(){
     var hours = Math.floor(elapsedTime / 1000 / 60 / 60); // calculate hours
     var time = pad(hours)+":"+pad(minutes)+":"+pad(seconds);
     document.getElementById("stopwatch").innerHTML=time;
-    window.dispatchEvent(new Event("time_change"));
 }
 /**
  * Starts the Activty Clock
@@ -119,6 +123,7 @@ function resetClock(){
 function drawCircle(miles){
     const canvas = document.querySelector("canvas");
     miles = Math.floor(miles * 100) / 100;
+    document.getElementById("distance").innerHTML = miles;
     
 
     if (!canvas.getContext)

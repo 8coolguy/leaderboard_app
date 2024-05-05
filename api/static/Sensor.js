@@ -60,9 +60,8 @@ class Sensor{
     heartRateChange(event){
         const value = event.target.value;
         const currentHeartRate = value.getUint8(1);
-        console.log('currentHeartRate:', Date.now().toString(), currentHeartRate);
+        // console.log('currentHeartRate:', Date.now().toString(), currentHeartRate);
         this.socket.emit("activity_tick",{[Date.now().toString()]:{heartRate:currentHeartRate}});
-        
         document.getElementById("hr").innerHTML = currentHeartRate;
     }
     cScChange(event){
@@ -99,25 +98,21 @@ class Sensor{
             offset += 2;
         }
         const distance = deltaRev*0.001310472;
-        const speed = deltaRev/deltaWheelTime*60*1024*60*0.001310472;
-        const cadence = deltaCrankRevs/deltaCrankTime*60*1024;
-
+        var speed = deltaRev/deltaWheelTime*60*1024*60*0.001310472;
+        var cadence = deltaCrankRevs/deltaCrankTime*60*1024;
+        if(!isNaN(distance)) window.dispatchEvent(new CustomEvent("time_change",{detail: distance}));
         
-        // if(speed!=NaN) console.log('speed:',Date.now().toString(),speed);
-        if(speed!=Nan){
-            document.getElementById("speed").innerHTML = speed;
+        if(!isNaN(speed)){
             socket.emit("activity_tick",{[Date.now().toString()]:{speed:speed,distance:distance}});
-        }else{
-            document.getElementById("speed").innerHTML = "--";
-        }
-        // if(cadence!=NaN) console.log('cadence:',Date.now().toString(),cadence);
-        // if(speed!=NaN)
-        // if(cadence!=NaN)
-        if(cadence!=Nan){
-            document.getElementById("cadence").innerHTML = cadence;
+            speed = Math.floor(speed)*100 /100;
+            document.getElementById("speed").innerHTML = speed;
+        }else if(!isNaN(cadence)){
             socket.emit("activity_tick",{[Date.now().toString()]:{cadence:cadence}});
+            cadence = Math.floor(cadence)*100 /100;
+            document.getElementById("cadence").innerHTML = cadence;
         }else{
             document.getElementById("cadence").innerHTML = "--";
+            document.getElementById("speed").innerHTML = "--";
         }
     }
 }
