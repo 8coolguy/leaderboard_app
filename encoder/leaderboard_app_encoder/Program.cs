@@ -34,10 +34,9 @@ app.MapGet("/weatherforecast/{rid}/{uid}",  (string rid,string uid) =>
     var startTime = response2.Body;
     FirebaseResponse response3 = client.Get("rooms/past_rooms/"+rid+"/leaderboard/"+uid+"/distance");
     float totalDistance = (float) Convert.ToDouble(response3.Body);
-
     dynamic result = JsonConvert.DeserializeObject(json);
     Encoder.CreateTimeBasedActivity(result,Encoder.ToDateTime(startTime),totalDistance);
-    return Results.File("/Users/8coolguy/Documents/leaderboard_app/encoder/leaderboard_app_encoder/ActivityEncodeRecipe.fit");
+    return Results.File(System.Environment.CurrentDirectory+"/ActivityEncodeRecipe.fit");
     
 })
 .WithName("GetWeatherForecast")
