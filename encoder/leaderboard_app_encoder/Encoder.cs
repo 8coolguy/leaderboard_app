@@ -1,17 +1,13 @@
 using System;
 using Dynastream.Fit;
+using Newtonsoft.Json.Linq;
 
 namespace EncoderFunctions;
 
 public class Encoder{
-    
-
-    static public void CreateTimeBasedActivity(dynamic timestamps,Dynastream.Fit.DateTime startTime)
+    static public void CreateTimeBasedActivity(dynamic timestamps,Dynastream.Fit.DateTime startTime,float totalDistance)
         {
-            const double TwoPI = Math.PI * 2.0;
-            const double SemicirclesPerMeter = 107.173;
             const string FileName = "ActivityEncodeRecipe.fit";
-
             var messages = new List<Mesg>();
 
             // Timer Events are a BEST PRACTICE for FIT ACTIVITY files
@@ -34,79 +30,59 @@ public class Encoder{
             developerIdMesg.SetApplicationVersion(110);
             messages.Add(developerIdMesg);
 
-            // Create the Developer Data Field Descriptions
-            var doughnutsFieldDescMesg = new FieldDescriptionMesg();
-            doughnutsFieldDescMesg.SetDeveloperDataIndex(0);
-            doughnutsFieldDescMesg.SetFieldDefinitionNumber(0);
-            doughnutsFieldDescMesg.SetFitBaseTypeId(FitBaseType.Float32);
-            doughnutsFieldDescMesg.SetFieldName(0, "Doughnuts Earned");
-            doughnutsFieldDescMesg.SetUnits(0, "doughnuts");
-            doughnutsFieldDescMesg.SetNativeMesgNum(MesgNum.Session);
-            messages.Add(doughnutsFieldDescMesg);
-
-            FieldDescriptionMesg hrFieldDescMesg = new FieldDescriptionMesg();
-            hrFieldDescMesg.SetDeveloperDataIndex(0);
-            hrFieldDescMesg.SetFieldDefinitionNumber(1);
-            hrFieldDescMesg.SetFitBaseTypeId(FitBaseType.Uint8);
-            hrFieldDescMesg.SetFieldName(0, "Heart Rate");
-            hrFieldDescMesg.SetUnits(0, "bpm");
-            hrFieldDescMesg.SetNativeFieldNum(RecordMesg.FieldDefNum.HeartRate);
-            hrFieldDescMesg.SetNativeMesgNum(MesgNum.Record);
-            messages.Add(hrFieldDescMesg);
-
             // Every FIT ACTIVITY file MUST contain Record messages
-            Dynastream.Fit.DateTime timestamp =new Dynastream.Fit.DateTime(System.DateTime.UtcNow);
+            Dynastream.Fit.DateTime timestamp=new Dynastream.Fit.DateTime(System.DateTime.Now);
+            uint prevTimeStamp = 0;
             float distance =0;
             float speed =0;
             byte heartRate = 0;
-            byte cadence = 0;
-            foreach (var dino in timestamps){
-                Console.WriteLine($"{dino.Name}");
-                timestamp = ToDateTime(dino.Name);
+            byte cadence = Byte.MinValue;
+            // int c =0;
+            foreach (var timestampObj in timestamps){
+                // c+=1;
                 var recordMesg = new RecordMesg();
-                Console.WriteLine($"{timestamp.GetDateTime()}");
-                recordMesg.SetTimestamp(timestamp);
-                foreach (var dino1 in dino){
-                    foreach (var dino2 in dino1){
-                        // Create a new Record message and set the timestamp
-                        if(dino2.Name=="heartRate" &&dino2.Value > 0){
-                            heartRate = (byte)dino2.Value;
-                            // recordMesg.SetHeartRate();
-                            Console.WriteLine($"{(byte)dino2.Value}");
-                        } // Sine
-                        if(dino2.Name=="speed" && dino2.Value > 0){
-                            recordMesg.SetSpeed((float)(dino2.Value)*1609.34f);
-                            Console.WriteLine($"{(float)dino2.Value}");
-                        }
-                        if(dino2.Name=="cadence" && dino2.Value > 0){
-                            recordMesg.SetCadence((byte)(dino2.Value));
-                            Console.WriteLine($"{(byte)dino2.Value}");
-                        }
-                        if(dino2.Name=="distance" && dino2.Value > 0){
-                            distance = (float)(dino2.Value)*1609.34f;
-                            Console.WriteLine($"{(float)dino2.Value}");
-                        }
-
-                        // Fake Record Data of Various Signal Patterns
-                         // Ramp // Sawtooth
-                        
-                        
-
-                        // Add a Developer Field to the Record Message
-                        // var hrDevField = new DeveloperField(hrFieldDescMesg, developerIdMesg);
-                        // recordMesg.SetDeveloperField(hrDevField);
-                        // hrDevField.SetValue((byte)((Math.Sin(TwoPI * (0.01 * i + 10)) + 1.0) * 127.0)); // Sine
-
-                        // Write the Rercord message to the output stream
-                        
+                timestamp = ToDateTime(timestampObj.Name);
+                //code assumes the timestamps are sorted
+                if(prevTimeStamp != 0){
+                    for(uint i =prevTimeStamp+1; i<timestamp.GetTimeStamp();i++){
+                        //Console.WriteLine(i);
+                        recordMesg = new RecordMesg();
+                        recordMesg.SetTimestamp(new Dynastream.Fit.DateTime(i));
+                        recordMesg.SetPower(0);
+                        recordMesg.SetSpeed(0f);
+                        recordMesg.SetHeartRate(heartRate);
+                        recordMesg.SetCadence(Byte.MinValue);
+                        recordMesg.SetDistance(distance*.447f);
+                        messages.Add(recordMesg);
                     }
                 }
-                // recordMesg.SetPower(100);
+                recordMesg = new RecordMesg();
+                JObject timestampDetails = timestampObj.First;
+                // Console.WriteLine(timestamp.GetTimeStamp());
+                var tmp = timestampDetails.GetValue("speed");
+                speed = tmp is null ? 0f : (float)tmp;
+                tmp = timestampDetails.GetValue("heartRate");
+                heartRate = tmp is null ? heartRate : (byte)tmp;
+                tmp = timestampDetails.GetValue("distance");
+                distance = tmp is null ? distance : (float)tmp;
+                tmp = timestampDetails.GetValue("cadence");
+                cadence = tmp is null || (float)tmp < 0f ? Byte.MinValue : (byte)tmp;
+                // Add a Developer Field to the Record Message
+                // var hrDevField = new DeveloperField(hrFieldDescMesg, developerIdMesg);
+                // recordMesg.SetDeveloperField(hrDevField);
+                // hrDevField.SetValue((byte)((Math.Sin(TwoPI * (0.01 * i + 10)) + 1.0) * 127.0)); // Sine
+                // Write the Rercord message to the output stream                        
+                
+                recordMesg.SetTimestamp(timestamp);
+                recordMesg.SetPower(100);
+                recordMesg.SetSpeed(speed*.447f);
                 recordMesg.SetHeartRate(heartRate);
-                // recordMesg.SetDistance(distance); // Square
+                recordMesg.SetCadence(cadence);
+                recordMesg.SetDistance(distance*.447f);
                 messages.Add(recordMesg);
+                prevTimeStamp = timestamp.GetTimeStamp();
             }
-
+            // Console.WriteLine(c);
 
             // Timer Events are a BEST PRACTICE for FIT ACTIVITY files
             var eventMesgStop = new EventMesg();
@@ -131,16 +107,12 @@ public class Encoder{
             sessionMesg.SetStartTime(startTime);
             sessionMesg.SetTotalElapsedTime(timestamp.GetTimeStamp() - startTime.GetTimeStamp());
             sessionMesg.SetTotalTimerTime(timestamp.GetTimeStamp() - startTime.GetTimeStamp());
+            //sessionMesg.SetTotalDistance(totalDistance*.447f);
             sessionMesg.SetSport(Sport.Cycling);
             sessionMesg.SetSubSport(SubSport.Generic);
             sessionMesg.SetFirstLapIndex(0);
             sessionMesg.SetNumLaps(1);
 
-            // Add a Developer Field to the Session message
-            var doughnutsEarnedDevField = new DeveloperField(doughnutsFieldDescMesg, developerIdMesg);
-            doughnutsEarnedDevField.SetValue(sessionMesg.GetTotalElapsedTime() / 1200.0f);
-            sessionMesg.SetDeveloperField(doughnutsEarnedDevField);
-            messages.Add(sessionMesg);
 
             // Every FIT ACTIVITY file MUST contain EXACTLY one Activity message
             var activityMesg = new ActivityMesg();
@@ -200,13 +172,10 @@ public class Encoder{
         {
             encoder.Write(message);
         }
-
         // Update the data size in the header and calculate the CRC
         encoder.Close();
-
         // Close the output stream
         fitDest.Close();
-
         Console.WriteLine($"Encoded FIT file {fitDest.Name}");
     }
     private static uint epoch = (uint)(new System.DateTime(1989, 12, 31, 0, 0, 0, DateTimeKind.Utc) - new System.DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds;
@@ -218,11 +187,3 @@ public class Encoder{
         return new Dynastream.Fit.DateTime(dateTimeValue);
     } 
 }
-public class Metric  {
-    public string ?cadence { get; set;}
-    public string ?heartRate { get; set;}
-    public string ?speed { get; set;}
-};
-public class Tick{
-    public Dictionary<string,Metric> metric { get; set;}
-};
