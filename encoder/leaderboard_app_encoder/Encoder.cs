@@ -74,7 +74,6 @@ public class Encoder{
                 // Write the Rercord message to the output stream                        
                 
                 recordMesg.SetTimestamp(timestamp);
-                recordMesg.SetPower(100);
                 recordMesg.SetSpeed(speed*.447f);
                 recordMesg.SetHeartRate(heartRate);
                 recordMesg.SetCadence(cadence);
