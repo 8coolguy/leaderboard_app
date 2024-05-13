@@ -114,9 +114,25 @@ def handle_activity_end(end_time):
         db.child("rooms").child("past_rooms").child(idf).update(room_data)
         db.child("rooms").child("current_rooms").child(room_id).remove()
 
-        
-        
         emit("end",f'/history/{idf}',to=room_id)
+
+
+@socketio.on("leaderboard")
+def handle_leaderboard():
+    uid = session['uid']
+    room_id = request.referrer.split("/")[-1]
+    players = db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").shallow().get().val()
+    res = []
+    for player in players:
+        distance = db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").child(player).get().val().get('distance',0)
+        if player == uid:
+            res.insert(0,distance)
+        else:
+            res.append(distance)
+    print(res)
+    emit("leaderboard",res,broadcast=False)
+
+
 
 
 

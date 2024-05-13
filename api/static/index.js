@@ -1,18 +1,11 @@
 var socket;
-var miles =0;
-var started=false;
 //Global Variable for the stopwatch
 var startTime;
 var stopWatchInterval;
 var elapsedPause=0;
 var mile = 0;
 var devices =[];
-var cumulativeWheelRevolutions = 0;
-var lastWheelEventTime = 0;
-var cumulativeCrankRevolutions = 0;
-var lastCrankEventTime = 0;
 
-var temp;
 
 const x_pos = 100;//x pos of circle
 const y_pos = 100;//y pos of circle
@@ -20,8 +13,14 @@ const r = 50;//radius od circle
 const m = 10;//mod of small circle
 
 
-window.addEventListener("time_change",(event) =>{ miles+=event.detail;console.log(miles); drawCircle(miles);});
-// window.addEventListener("start",(arg) => {);
+window.addEventListener("time_change",(event) =>{ 
+    miles+=event.detail;
+    console.log(miles); 
+    document.getElementById("distance").innerHTML = miles;
+    socket.emit("leaderboard", "Hello");
+    // drawCircle(miles);
+});
+
 function connectSocket(){
     socket=io({autoconnect:false});
     socket.connect();
@@ -30,6 +29,7 @@ function connectSocket(){
             console.log(msg);
         });
         socket.emit("user_join", "Hello");
+        socket.emit("leaderboard");
     })
     socket.on("start", (arg) => {
         startTime =arg;
@@ -40,8 +40,13 @@ function connectSocket(){
     });
     socket.on("distance", (arg) => {
         miles = arg;
-        drawCircle(miles);
+        // drawCircle(miles);
     });
+    socket.on("leaderboard",(arg)=>{
+        //update sticks
+        drawStick(arg);
+        console.log(arg);
+    })
 }
 
 window.addEventListener("beforeunload", function (e) {
@@ -123,7 +128,7 @@ function resetClock(){
 function drawCircle(miles){
     const canvas = document.querySelector("canvas");
     miles = Math.floor(miles * 100) / 100;
-    document.getElementById("distance").innerHTML = miles;
+    
     
 
     if (!canvas.getContext)
@@ -163,4 +168,123 @@ function pad(i){
  * Deletes a current form element.
  */
 function clearForm(event){
+}
+/**
+ * Function draws stick figure bikes
+ */
+function drawStick(array){
+    const canvas = document.getElementById("canvas");
+    if (!canvas.getContext)
+        return;
+    
+    const ctx = canvas.getContext("2d");
+    var space = canvas.width/6;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const mean = (array.reduce((a, b) => a + b) / array.length);
+    const std = getStandardDeviation (array);
+    console.log(array);
+    console.log(mean,std);
+    
+    for(let i =  array.length-1; i >= 0; i--){
+        var score = ((array[i]-mean)/std);
+        if (isNaN(score)) score = 0;
+        if(i==0)
+                ctx.strokeStyle = "green";
+        else
+                ctx.strokeStyle = "black";
+        
+        var x = canvas.width/2+score*space;
+        var y = canvas.height/2;
+        var r = 10;
+        var gap = 25;
+        var bb = 12;
+        var seatPost = 17;
+        var top = 8;
+        var handle = 5;
+        var stickLength = 15;
+        var stickArm = 10;
+        var stickLegY = 10;
+        var stickLegX = 3;
+
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x-gap, y, r, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap,y);
+        ctx.lineTo(x-gap+bb,y)
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb,y);
+        ctx.lineTo(x-gap+bb,y-seatPost);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb,y);
+        ctx.lineTo(x-gap+bb+top,y-seatPost);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb,y-seatPost);
+        ctx.lineTo(x-gap,y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb,y-seatPost);
+        ctx.lineTo(x-gap+bb+top,y-seatPost);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb+top,y-seatPost);
+        ctx.lineTo(x,y);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x-gap+bb+top, y-seatPost-handle, handle, 0,Math.PI/2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb,y-seatPost);
+        ctx.lineTo(x-gap+bb,y-seatPost-stickLength);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb,y-seatPost);
+        ctx.lineTo(x-gap+bb-stickLegX,y-seatPost+stickLegY);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb,y-seatPost);
+        ctx.lineTo(x-gap+bb+stickLegX,y-seatPost+stickLegY);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(x-gap+bb, y-seatPost-stickLength-r/4, r/4, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(x-gap+bb-stickLength/2,y-seatPost-stickLength/2);
+        ctx.lineTo(x-gap+bb+stickLength/2,y-seatPost-stickLength/2);
+        ctx.stroke();
+    }
+}
+
+/**
+ * Functions that generated background for the bikes
+ */
+function generateBackground(){
+    //Do something
+}
+/*
+*Std Dev Code by = Foxcode on StackOverflow
+*/
+function getStandardDeviation (array) {
+    const n = array.length;
+    const mean = array.reduce((a, b) => a + b) / n;
+    return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n);
 }

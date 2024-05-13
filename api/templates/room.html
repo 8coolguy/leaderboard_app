@@ -29,11 +29,11 @@
                 <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load, every 500s">
                     
                 </div>
-                <canvas class="" width="200" height="200" id="canvas"></canvas>
+                <canvas class="" width="500" height="200" id="canvas"></canvas>
                 <div hx-get="/monitor" hx-trigger="load" hx-swap="outerHTML"></div>
             </div>
                 <div class="flex flex-col justify-center items-center p-4 gap-8">
-                    <div hx-get="/leaderboard" hx-trigger="load, every 500s" hx-swap="innerHTML"></div>
+                    <div hx-get="/leaderboard" hx-trigger="load, every 30s" hx-swap="innerHTML"></div>
                     <div hx-get="/deviceDiv" hx-trigger="load" hx-swap="outerHTML"></div>
 
                     <!-- <div class="flex flex-col justify-center items-center bg-amber-200 border-[6px] rounded-md tw-border-solid border-black">
