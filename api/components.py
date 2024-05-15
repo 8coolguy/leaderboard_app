@@ -207,7 +207,6 @@ def history():
     history = db.child("users").child(uid).child("history").get().val()
     for key in history:
         name = db.child("rooms").child("past_rooms").child(history[key]).child("name").get().val()
-        print(history[key])
         timestamp = db.child("rooms").child("past_rooms").child(history[key]).child("start").get().val()
         d = datetime.fromtimestamp(int(timestamp)//1000)
         sd = d.strftime('%B %d,%Y %I:%M %p')

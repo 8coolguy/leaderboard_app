@@ -47,7 +47,7 @@ def strava_login():
 	return buttonDiv
 
 def getFitFile(room_id,uid):
-	urllib.request.urlretrieve(f'http://localhost:5101/weatherforecast/{room_id}/{uid}', f'{room_id}_{uid}.fit')
+	urllib.request.urlretrieve(f'https://leaderboard-encoder.azurewebsites.net/weatherforecast/{room_id}/{uid}', f'{room_id}_{uid}.fit')
 
 @app.route("/post_strava_login",methods=["GET"])
 def post_strava_login():
@@ -56,17 +56,19 @@ def post_strava_login():
 	room_id = request.args.get("state")
 	uid = session['uid']
 	name = db.child("rooms").child("past_rooms").child(room_id).child("name").get().val()
-	getFitFile(room_id,uid)
-	
-	client=Client()	
-	token_response = client.exchange_code_for_token(client_id=ids, client_secret=s, code=code)
-	
-	access_token = token_response['access_token']
-	refresh_token = token_response['refresh_token']
-	expires_at = token_response['expires_at']
-	client.access_token = token_response['access_token']
-
 	try:
+		getFitFile(room_id,uid)
+	
+	
+		client=Client()	
+		token_response = client.exchange_code_for_token(client_id=ids, client_secret=s, code=code)
+		
+		access_token = token_response['access_token']
+		refresh_token = token_response['refresh_token']
+		expires_at = token_response['expires_at']
+		client.access_token = token_response['access_token']
+
+	
 		f=open( f'{room_id}_{uid}.fit',mode="rb")
 		fit_file=f.read()
 		activity=client.upload_activity(

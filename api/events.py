@@ -129,7 +129,6 @@ def handle_leaderboard():
             res.insert(0,distance)
         else:
             res.append(distance)
-    print(res)
     emit("leaderboard",res,broadcast=False)
 
 

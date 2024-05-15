@@ -27,12 +27,13 @@ IFirebaseConfig fc = new FirebaseConfig(){
 
 app.MapGet("/weatherforecast/{rid}/{uid}",  (string rid,string uid) =>
 {
-    IFirebaseClient client=new FireSharp.FirebaseClient(fc);
+    IFirebaseClient client = new FireSharp.FirebaseClient(fc);
     FirebaseResponse response = client.Get("rooms/past_rooms/"+rid+"/players/"+uid);
     var json = response.Body;
+    if(json.Length <=4) return Results.NotFound();
     FirebaseResponse response2 = client.Get("rooms/past_rooms/"+rid+"/start");
     var startTime = response2.Body;
-    Console.WriteLine(startTime);
+    if(startTime.Length <=4) return Results.NotFound();
     dynamic result = JsonConvert.DeserializeObject(json);
     Encoder.CreateTimeBasedActivity(result,Encoder.ToDateTime(startTime),0.0f);
     return Results.File(System.Environment.CurrentDirectory+"/ActivityEncodeRecipe.fit");
