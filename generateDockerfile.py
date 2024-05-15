@@ -11,6 +11,7 @@ cmds = [
  	 "COPY . /app\n",
   	"RUN pip --no-cache-dir install -r requirements.txt\n",
   	'''CMD ["flask", "run","--host","0.0.0.0"]\n''',
+	"EXPOSE 8080\m",
 ]
 
 dockerFile.writelines(cmds)
