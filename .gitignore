@@ -6,4 +6,3 @@ encoder/leaderboard_app_encoder/bin
 *.cache
 encoder/leaderboard_app_encoder/obj/**/
 api/static/output.css
-api/Dockerfile
