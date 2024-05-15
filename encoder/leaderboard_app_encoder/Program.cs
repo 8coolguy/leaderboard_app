@@ -21,8 +21,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 IFirebaseConfig fc = new FirebaseConfig(){
-    AuthSecret = Environment.GetEnvironmentVariable("apiKey"),
-    BasePath = Environment.GetEnvironmentVariable("databaseURL")
+    AuthSecret = Environment.GetEnvironmentVariable("APIKEY"),
+    BasePath = Environment.GetEnvironmentVariable("DATABASEURL")
 };
 
 app.MapGet("/weatherforecast/{rid}/{uid}",  (string rid,string uid) =>

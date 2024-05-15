@@ -5,10 +5,10 @@ import pyrebase
 socketio = SocketIO()
 
 config={
-  "apiKey": os.getenv("apiKey"),
-  "authDomain": os.getenv("authDomain"),
-  "databaseURL": os.getenv("databaseURL"),
-  "storageBucket": os.getenv("storageBucket")
+  "APIKEY": os.getenv("APIKEY"),
+  "AUTHDOMAIN": os.getenv("AUTHDOMAIN"),
+  "DATABASEURL": os.getenv("DATABASEURL"),
+  "STORAGEBUCKET": os.getenv("STORAGEBUCKET")
 }
 #initialize firebase
 firebase = pyrebase.initialize_app(config)
