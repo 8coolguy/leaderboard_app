@@ -1,8 +1,6 @@
-from flask_socketio import SocketIO 
 import os
 import pyrebase
 
-socketio = SocketIO()
 
 config={
   "apiKey": os.getenv("APIKEY"),

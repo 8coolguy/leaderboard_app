@@ -1,15 +1,12 @@
-from flask import Flask, render_template, request, session, redirect
+from flask import Flask, request, session, redirect
 from flask_cors import CORS
 from flask_htmx import HTMX, make_response
 from flask_session import Session
+from flask_socketio import SocketIO, emit 
+import flask_socketio
 from stravalib import Client
-from datetime import datetime, timedelta
 from download_data import get_api_values
-import time
-import random
-from events import socketio
-from extensions import firebase, auth, db
-from flask_socketio import send
+from extensions import auth, db
 from pages import pages
 from components import components
 import urllib.request
@@ -18,14 +15,16 @@ MAX_ROOMS = 10
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'super sdfsdfhsidfuhsijdfhskdjfskfhksfhkshfksdhfkjecret key'
+app.register_blueprint(pages)
+app.register_blueprint(components)
+
 CORS(app)
 htmx=HTMX(app)
 Session(app)
-socketio.init_app(app)
+socketio = SocketIO(app,cors_allowed_origins="*")
+import events
 s,ids=get_api_values()
 
-app.register_blueprint(pages)
-app.register_blueprint(components)
 
 #Initialze person as dictionary
 person = {"is_logged_in": False, "name": "", "email": "", "uid": ""}
@@ -199,3 +198,5 @@ def kick():
 		player=db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(uid).remove()
 		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("kicked").update({str(uid):"1"})
 		return '''<p></p>'''
+
+

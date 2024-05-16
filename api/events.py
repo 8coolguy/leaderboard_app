@@ -1,10 +1,7 @@
-from extensions import socketio
-from flask_socketio import emit,send,join_room,leave_room
+from app import socketio
+from flask_socketio import emit,join_room,leave_room
 from flask import request,session
-from statistics import mean
 from extensions import db
-import datetime
-import calendar
 
 @socketio.on("connect")
 def handle_connect():

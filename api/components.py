@@ -1,6 +1,6 @@
-from extensions import firebase, auth, db
+from extensions import db
 from flask import Blueprint, request, session
-from flask_htmx import HTMX, make_response
+from flask_htmx import make_response
 from datetime import datetime
 from dateutil import tz
 

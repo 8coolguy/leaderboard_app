@@ -25,12 +25,12 @@ function connectSocket(){
     socket=io({autoconnect:false});
     socket.connect();
     socket.on("connect", function(res) {
-        socket.on('response', (msg) => {
-            console.log(msg);
-        });
         socket.emit("user_join", "Hello");
-        socket.emit("leaderboard");
     })
+	socket.on('response', (msg) => {
+	    console.log(msg);
+       		socket.emit("leaderboard");
+	});
     socket.on("start", (arg) => {
         startTime =arg;
         startClock();
