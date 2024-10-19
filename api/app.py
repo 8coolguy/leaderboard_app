@@ -1,4 +1,4 @@
-from flask import Flask, request, session, redirect
+from flask import Flask, request, session, redirect, url_for
 from flask_cors import CORS
 from flask_htmx import HTMX, make_response
 from flask_session import Session
@@ -40,7 +40,7 @@ def strava_login():
 	uid=session['uid']
 	
 	client=Client()
-	authorize_url = client.authorization_url(client_id=ids, redirect_uri=f'http://127.0.0.1:8000/post_strava_login', scope=["read","activity:write"],state=room_id)
+	authorize_url = client.authorization_url(client_id=ids, redirect_uri=url_for('post_strava_login',_external=True), scope=["read","activity:write"],state=room_id)
 	buttonDiv=''''''
 	buttonDiv+=f'''<a href="{authorize_url}" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded" >You Sure?</a>'''
 	return buttonDiv
