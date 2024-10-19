@@ -1,5 +1,6 @@
 *.pyc
 *.env
+*.fit
 api/flask_session/*
 *.vscode
 encoder/leaderboard_app_encoder/bin
