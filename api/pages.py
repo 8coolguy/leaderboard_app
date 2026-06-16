@@ -28,6 +28,6 @@ def login():
 @pages.route("/signup", methods=["GET"])
 def signup():
 	return render_template("signup.html")
-@pages.route("/frogotpassword", methods=["GET"])
-def frogotpassword():
-	return render_template("frogotpassword.html")
+@pages.route("/forgotpassword", methods=["GET"])
+def forgotpassword():
+	return render_template("forgotpassword.html")

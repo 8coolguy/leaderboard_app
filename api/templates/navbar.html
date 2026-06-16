@@ -1,11 +1,19 @@
-<nav class="sticky bg-white dark:bg-amber-200 fixed w-full z-20 top-0 start-0">
-    <div class="grid grid-cols-2 p-4">
-        <div>
-            <span class="self-center text-2xl font-semibold whitespace-nowrap">Virtual Cycling Leaderboard</span>
-        </div>
-        <div class="flex justify-end md:order-2 space-x-3 md:space-x-0 rtl:space-x-reverse">
-            <button class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" hx-get="/logout" hx-redirect="/" hx-trigger="click">Log Out</button>
+<nav class="sticky top-0 z-30 w-full bg-white/90 backdrop-blur-md border-b border-slate-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <a href="/" class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-emerald-500 rounded-lg flex items-center justify-center">
+                    <span class="text-white text-lg font-bold">🚴</span>
+                </div>
+                <span class="text-lg font-bold text-slate-800 tracking-tight">Virtual Cycling</span>
+            </a>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-sm text-slate-600 hover:text-emerald-600 font-medium transition-colors">Dashboard</a>
+                <button hx-get="/logout" hx-redirect="/" hx-trigger="click"
+                    class="text-sm bg-slate-100 hover:bg-red-50 hover:text-red-600 text-slate-600 font-medium py-2 px-4 rounded-lg transition-all">
+                    Log Out
+                </button>
+            </div>
         </div>
     </div>
-    
 </nav>

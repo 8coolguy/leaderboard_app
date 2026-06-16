@@ -2,10 +2,12 @@
 <html lang="en">
     {% include 'header.html' without context %}
     {% include 'navbar.html' %}
-    <body>
-            <div class="h-max flex justify-center p-4 items-center" hx-get="{{ '/results/' ~ room_id }}" hx-trigger="load">
-        </div>
-
+    <body class="bg-slate-50 min-h-screen">
+        <main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+            <div hx-get="{{ '/results/' ~ room_id }}" hx-trigger="load"
+                class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+            </div>
+        </main>
+        {% include 'footer.html' %}
     </body>
-    {% include 'footer.html' %}
 </html>

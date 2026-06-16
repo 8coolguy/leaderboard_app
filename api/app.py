@@ -1,4 +1,4 @@
-from flask import Flask, request, session, redirect, url_for
+from flask import Flask, request, session, redirect, url_for, render_template
 from flask_cors import CORS
 from flask_htmx import HTMX, make_response
 from flask_session import Session
@@ -12,6 +12,50 @@ from components import components
 import urllib.request
 
 MAX_ROOMS = 10
+
+# ── Firebase error → human-readable messages ──────────────────────────────
+FIREBASE_ERRORS = {
+    "INVALID_LOGIN_CREDENTIALS": ("Invalid credentials", "The email or password you entered is incorrect."),
+    "INVALID_EMAIL": ("Invalid email", "Please enter a valid email address."),
+    "EMAIL_NOT_FOUND": ("Account not found", "No account exists with this email address. Sign up first."),
+    "INVALID_PASSWORD": ("Wrong password", "The password you entered is incorrect. Try again or reset it."),
+    "USER_DISABLED": ("Account disabled", "This account has been disabled. Contact support for help."),
+    "EMAIL_EXISTS": ("Email already in use", "An account with this email already exists. Try logging in instead."),
+    "WEAK_PASSWORD": ("Weak password", "Password should be at least 6 characters long."),
+    "TOO_MANY_ATTEMPTS": ("Too many attempts", "Too many tries. Please wait a moment and try again."),
+    "MISSING_EMAIL": ("Missing email", "Please provide an email address."),
+    "MISSING_PASSWORD": ("Missing password", "Please provide a password."),
+    "USER_NOT_FOUND": ("Account not found", "No account found with this email address."),
+}
+
+def firebase_error(e):
+    """Parse a Firebase exception into (title, message) tuple."""
+    msg = str(e)
+    # Firebase errors come as JSON, try to extract the message
+    import json
+    try:
+        err = json.loads(msg.replace("'", '"'))
+        code = err.get("error", {}).get("message", "") if isinstance(err, dict) else ""
+    except (json.JSONDecodeError, AttributeError):
+        code = ""
+    for key, (title, detail) in FIREBASE_ERRORS.items():
+        if key in msg or key in code:
+            return title, detail
+    # Fallback: try to clean up the raw error
+    clean = msg.replace("{", "").replace("}", "").replace("'", "")
+    if len(clean) > 120:
+        clean = clean[:120] + "…"
+    return "Something went wrong", clean if clean else "An unexpected error occurred. Please try again."
+
+def render_error(title, message, back_url=None, back_label=None):
+    """Render the error page template."""
+    return render_template(
+        "partials/error_page.html",
+        error_title=title,
+        error=message,
+        back_url=back_url or "/login",
+        back_label=back_label or "Back to Sign In"
+    )
 app = Flask(__name__)
 app.config['SESSION_TYPE'] = 'filesystem'
 app.config['SECRET_KEY'] = 'super sdfsdfhsidfuhsijdfhskdjfskfhksfhkshfksdhfkjecret key'
@@ -42,7 +86,7 @@ def strava_login():
 	client=Client()
 	authorize_url = client.authorization_url(client_id=ids, redirect_uri=url_for('post_strava_login',_external=True), scope=["read","activity:write"],state=room_id)
 	buttonDiv=''''''
-	buttonDiv+=f'''<a href="{authorize_url}" class="bg-orange-500 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded" >You Sure?</a>'''
+	buttonDiv+=f'''<a href="{authorize_url}" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-5 rounded-xl transition-colors shadow-sm inline-block" >✅ Yes, upload to Strava</a>'''
 	return buttonDiv
 
 def getFitFile(room_id,uid):
@@ -80,7 +124,7 @@ def post_strava_login():
 		f.close()
 		return redirect("/")
 	except Exception as e:
-		return f'<p>{str(e)}</p>'
+		return render_error("Strava upload failed", "Could not upload your ride to Strava. The encoder service may be unavailable. Your ride data is saved and you can try again later.\n\nError: " + str(e)[:200], back_url="/", back_label="Back to Dashboard")
 		
 @app.route("/firebase_login",methods=["POST","GET"])
 def firebase_login():
@@ -88,21 +132,19 @@ def firebase_login():
 		result=request.form
 		email=result["email"]
 		password=result["pass"]
+		if not email or not password:
+			return render_error("Missing fields", "Please enter both your email and password.")
 		try:
-			#Try signing in the user with the given information
 			user = auth.sign_in_with_email_and_password(email, password)
-			
-			#insert the user information into the session
 			session["is_logged_in"] = True
 			session["email"] = user["email"]
 			session["uid"] = user["localId"]
-			
-			#Get the name of the user
 			session["name"] = user["displayName"] or email
 			db.child("users").child(session["uid"]).update({"name":session["name"]})
 			return redirect("/")
 		except Exception as e:
-			return f'<p>{str(e)}</p>'
+			title, msg = firebase_error(e)
+			return render_error(title, msg, back_url="/login", back_label="Try Again")
 	else:
 		return "<p>GET</p>"
 @app.route("/firebase_register",methods=["POST","GET"])
@@ -112,34 +154,47 @@ def firebase_register():
 		email=result["email"]
 		password=result["pass"]
 		password2=result["pass2"]
-		if password!=password2: return "uh oh"
+		if not email or not password:
+			return render_error("Missing fields", "Please fill in all required fields.", back_url="/signup", back_label="Try Again")
+		if password!=password2:
+			return render_error("Passwords don't match", "The two passwords you entered are different. Please try again.", back_url="/signup", back_label="Try Again")
 		try:
-			#Create User
 			user = auth.create_user_with_email_and_password(email, password)
 			auth.send_email_verification(user['idToken'])
-			return "<p>Success Login</p>"	
+			return render_template("partials/error_page.html",
+				error_title="Check your email",
+				error="We sent a verification link to " + email + ". Please verify your account, then sign in.",
+				back_url="/login",
+				back_label="Go to Sign In")
 		except Exception as e:
-			return f'<p>{str(e)}</p>'
+			title, msg = firebase_error(e)
+			return render_error(title, msg, back_url="/signup", back_label="Try Again")
 	else:
 		return "<p>GET</p>"
-@app.route("/firebase_frogot_password",methods=["POST","GET"])
-def firebase_frogot_password():
+@app.route("/firebase_forgot_password",methods=["POST","GET"])
+def firebase_forgot_password():
 	if request.method =="POST":
 		result=request.form
 		email=result["email"]
+		if not email:
+			return render_error("Missing email", "Please enter your email address.", back_url="/forgotpassword", back_label="Try Again")
 		try:
-			#send recovery email
 			auth.send_password_reset_email(email)
-			return "<p>Success Login</p>"	
+			return render_template("partials/error_page.html",
+				error_title="Email sent",
+				error="If an account exists for " + email + ", you will receive a password reset email shortly.",
+				back_url="/login",
+				back_label="Back to Sign In")
 		except Exception as e:
-			return f'<p>{str(e)}</p>'
+			title, msg = firebase_error(e)
+			return render_error(title, msg, back_url="/forgotpassword", back_label="Try Again")
 	else:
 		return "<p>GET</p>"
 @app.route("/session_user",methods=["POST","GET"])
 def session_user():
 	if request.method =="GET":
 		if session.get("is_logged_in",False):
-			return f'''<div class="flex justify-center items-center"><h1 class="text-xl font-bold ">Welcome</h1> <h1 class="text-l text-green-600 pl-3">{session.get("name","Arnav")}</h1></div>'''
+			return f'''<div class="flex items-center gap-2"><h1 class="text-2xl font-bold text-slate-800">Welcome back,</h1><h1 class="text-2xl font-bold text-emerald-600">{session.get("name","Rider")}</h1><span class="text-2xl">👋</span></div>'''
 					
 @app.route("/logout",methods=["POST","GET"])
 def logout():
