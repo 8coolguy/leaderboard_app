@@ -1,4 +1,4 @@
-from flask import Flask, request, session, redirect, url_for, render_template
+from flask import Flask, request, session, redirect, url_for, render_template, send_file
 from flask_cors import CORS
 from flask_htmx import HTMX, make_response
 from flask_session import Session
@@ -10,6 +10,10 @@ from extensions import auth, db
 from pages import pages
 from components import components
 import urllib.request
+import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
+import os
+import tempfile
 
 MAX_ROOMS = 10
 
@@ -86,7 +90,7 @@ def strava_login():
 	client=Client()
 	authorize_url = client.authorization_url(client_id=ids, redirect_uri=url_for('post_strava_login',_external=True), scope=["read","activity:write"],state=room_id)
 	buttonDiv=''''''
-	buttonDiv+=f'''<a href="{authorize_url}" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 px-5 rounded-xl transition-colors shadow-sm inline-block" >✅ Yes, upload to Strava</a>'''
+	buttonDiv+=f'''<a href="{authorize_url}" class="bg-orange-500 hover:bg-orange-600 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors inline-block" >Upload to Strava</a>'''
 	return buttonDiv
 
 def getFitFile(room_id,uid):
@@ -194,7 +198,7 @@ def firebase_forgot_password():
 def session_user():
 	if request.method =="GET":
 		if session.get("is_logged_in",False):
-			return f'''<div class="flex items-center gap-2"><h1 class="text-2xl font-bold text-slate-800">Welcome back,</h1><h1 class="text-2xl font-bold text-emerald-600">{session.get("name","Rider")}</h1><span class="text-2xl">👋</span></div>'''
+			return f'''<div><h1 class="text-xl font-semibold text-slate-900">Welcome back, {session.get("name","Rider")}</h1></div>'''
 					
 @app.route("/logout",methods=["POST","GET"])
 def logout():
@@ -241,6 +245,108 @@ def join_room():
 		if not str(room_id) in db.child("rooms").child("current_rooms").shallow().get().val(): return redirect(f'''/''')
 		player=db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").child(session['uid']).update({"name":session["name"]})
 		return redirect(f'''/room/{room_id}''')
+@app.route("/download/<string:room_id>", methods=["GET"])
+def download_fit(room_id):
+	if not session.get("is_logged_in", False):
+		return redirect("/login")
+
+	uid = session['uid']
+	name = db.child("rooms").child("past_rooms").child(room_id).child("name").get().val() or "ride"
+
+	# 1. Try the encoder for a proper FIT file
+	try:
+		getFitFile(room_id, uid)
+		fit_path = f'{room_id}_{uid}.fit'
+		if os.path.exists(fit_path) and os.path.getsize(fit_path) > 0:
+			return send_file(
+				fit_path,
+				as_attachment=True,
+				download_name=f'{name}_{room_id}.fit',
+				mimetype='application/octet-stream'
+			)
+	except Exception:
+		pass
+
+	# 2. Fallback: generate GPX from stored session data
+	try:
+		gpx_path = _generate_gpx(room_id, uid, name)
+		if gpx_path:
+			return send_file(
+				gpx_path,
+				as_attachment=True,
+				download_name=f'{name}_{room_id}.gpx',
+				mimetype='application/gpx+xml'
+			)
+	except Exception as e:
+		print(f"GPX generation failed: {e}")
+
+	return render_error(
+		"Download failed",
+		"Could not generate a ride file. The encoder service is unavailable and there is no saved session data to export.",
+		back_url=f"/history/{room_id}",
+		back_label="Back to results"
+	)
+
+
+def _generate_gpx(room_id, uid, name):
+	"""Generate a GPX file from stored Firebase ride data."""
+	safe_name = "".join(c for c in name if c.isalnum() or c in ' _-')[:50]
+
+	# Pull player data points: rooms/past_rooms/{room_id}/players/{uid}/
+	player_data = db.child("rooms").child("past_rooms").child(room_id).child("players").child(uid).get().val()
+	if not player_data:
+		return None
+
+	# Sort by timestamp (keys are epoch seconds)
+	points = []
+	for ts, values in sorted(player_data.items(), key=lambda x: int(x[0])):
+		try:
+			t = datetime.fromtimestamp(int(ts), tz=timezone.utc)
+		except (ValueError, OSError):
+			continue
+		hr = values.get("heartRate")
+		cad = values.get("cadence")
+		spd = values.get("speed")
+		dist = values.get("distance")
+		points.append({"time": t, "hr": hr, "cad": cad, "speed": spd, "dist": dist})
+
+	if len(points) < 2:
+		return None
+
+	# Build GPX XML
+	gpx = ET.Element("gpx", {
+		"version": "1.1",
+		"creator": "VirtualCyclingLeaderboard",
+		"xmlns": "http://www.topografix.com/GPX/1/1",
+		"xmlns:gpxtpx": "http://www.garmin.com/xmlschemas/TrackPointExtension/v1",
+	})
+
+	trk = ET.SubElement(gpx, "trk")
+	ET.SubElement(trk, "name").text = name
+	ET.SubElement(trk, "type").text = "virtual_ride"
+	trkseg = ET.SubElement(trk, "trkseg")
+
+	for pt in points:
+		trkpt = ET.SubElement(trkseg, "trkpt", {"lat": "0", "lon": "0"})
+		ET.SubElement(trkpt, "time").text = pt["time"].strftime("%Y-%m-%dT%H:%M:%SZ")
+		if pt["dist"] is not None:
+			ET.SubElement(trkpt, "distance").text = str(round(pt["dist"] * 1609.34, 1))
+
+		extensions = ET.SubElement(trkpt, "extensions")
+		tpx = ET.SubElement(extensions, "gpxtpx:TrackPointExtension")
+		if pt["hr"] is not None:
+			ET.SubElement(tpx, "gpxtpx:hr").text = str(int(pt["hr"]))
+		if pt["cad"] is not None:
+			ET.SubElement(tpx, "gpxtpx:cad").text = str(int(pt["cad"]))
+
+	tree = ET.ElementTree(gpx)
+	ET.indent(tree, space="  ")
+
+	tmp = tempfile.NamedTemporaryFile(mode="w+b", suffix=".gpx", delete=False)
+	tree.write(tmp, encoding="utf-8", xml_declaration=True)
+	tmp.close()
+	return tmp.name
+
 @app.route("/kick",methods=["POST","GET"])
 def kick():
 	if request.method =="POST" and session.get("is_logged_in",False):

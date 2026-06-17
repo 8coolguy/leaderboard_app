@@ -3,57 +3,42 @@
     {% include 'header.html' without context %}
     {% include 'navbar.html' %}
     <body class="bg-slate-50 min-h-screen">
-        <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-16">
-            <!-- Welcome Header -->
-            <div class="mb-8">
-                <div hx-get="/session_user" hx-swap="outerHTML" hx-trigger="load"
-                    class="text-2xl font-bold text-slate-800"></div>
-            </div>
+        <main class="max-w-2xl mx-auto px-6 pt-12 pb-16">
+            <div hx-get="/session_user" hx-swap="outerHTML" hx-trigger="load"
+                class="text-xl font-semibold text-slate-900 mb-10"></div>
 
-            <!-- Room Cards Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            <div class="space-y-6">
                 <!-- Create Room -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 bg-emerald-100 rounded-xl flex items-center justify-center">
-                            <span class="text-emerald-600 text-lg">＋</span>
-                        </div>
-                        <h2 class="text-lg font-semibold text-slate-800">Create Room</h2>
-                    </div>
-                    <form action="/create_room" method="POST" class="space-y-3">
-                        <input name="name" placeholder="Room name..."
-                            class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100">
+                <div class="bg-white rounded-xl ring-1 ring-slate-200 p-6">
+                    <h2 class="text-sm font-semibold text-slate-800 mb-4">Create a room</h2>
+                    <form action="/create_room" method="POST" class="flex gap-3">
+                        <input name="name" placeholder="Room name"
+                            class="flex-1 rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
                         <button type="submit"
-                            class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm">
-                            Create Room
+                            class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors whitespace-nowrap">
+                            Create
                         </button>
                     </form>
                 </div>
 
                 <!-- Join Room -->
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
-                            <span class="text-amber-600 text-lg">→</span>
-                        </div>
-                        <h2 class="text-lg font-semibold text-slate-800">Join Room</h2>
-                    </div>
-                    <form action="/join_room" method="POST" class="space-y-3">
-                        <input name="room_id" placeholder="Room PIN..."
-                            class="block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-100">
+                <div class="bg-white rounded-xl ring-1 ring-slate-200 p-6">
+                    <h2 class="text-sm font-semibold text-slate-800 mb-4">Join a room</h2>
+                    <form action="/join_room" method="POST" class="flex gap-3">
+                        <input name="room_id" placeholder="Room PIN"
+                            class="flex-1 rounded-lg border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100">
                         <button type="submit"
-                            class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 px-4 rounded-xl transition-colors text-sm">
-                            Join Room
+                            class="bg-slate-800 hover:bg-slate-900 text-white text-sm font-medium py-2.5 px-5 rounded-lg transition-colors whitespace-nowrap">
+                            Join
                         </button>
                     </form>
                 </div>
-            </div>
 
-            <!-- History Section -->
-            <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                <h2 class="text-lg font-semibold text-slate-800 mb-4">Recent Rides</h2>
-                <div hx-get="/history" hx-swap="outerHTML" hx-trigger="load"
-                    class="text-sm text-slate-500"></div>
+                <!-- History -->
+                <div class="bg-white rounded-xl ring-1 ring-slate-200 p-6">
+                    <h2 class="text-sm font-semibold text-slate-800 mb-4">Recent rides</h2>
+                    <div hx-get="/history" hx-swap="outerHTML" hx-trigger="load"></div>
+                </div>
             </div>
         </main>
         {% include 'footer.html' %}

@@ -4,33 +4,26 @@
     <body class="bg-slate-50 min-h-screen">
         {% include 'navbar.html' %}
         {% if room_id %}
-        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16">
+        <main class="max-w-7xl mx-auto px-6 pt-6 pb-16">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Left Column: Room Info + Monitor + Canvas -->
+                <!-- Left Column -->
                 <div class="lg:col-span-2 space-y-6">
-                    <!-- Room Info Card -->
                     <div hx-get="{{ '/session_room/' ~ room_id }}" hx-trigger="load, every 5s"
-                        class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+                        class="bg-white rounded-xl ring-1 ring-slate-200 p-6"></div>
+
+                    <div class="bg-white rounded-xl ring-1 ring-slate-200 p-4">
+                        <canvas width="600" height="220" id="canvas" class="w-full rounded-lg"></canvas>
                     </div>
 
-                    <!-- Canvas -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
-                        <canvas width="600" height="220" id="canvas" class="w-full rounded-xl"></canvas>
-                    </div>
-
-                    <!-- Monitor -->
                     <div hx-get="/monitor" hx-trigger="load" hx-swap="outerHTML"></div>
                 </div>
 
-                <!-- Right Column: Leaderboard + Devices -->
+                <!-- Right Column -->
                 <div class="space-y-6">
-                    <!-- Leaderboard -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-                        <h2 class="text-lg font-semibold text-slate-800 mb-3">🏆 Leaderboard</h2>
+                    <div class="bg-white rounded-xl ring-1 ring-slate-200 p-6">
+                        <h2 class="text-sm font-semibold text-slate-800 mb-4">Leaderboard</h2>
                         <div hx-get="/leaderboard" hx-trigger="load, every 10s" hx-swap="innerHTML"></div>
                     </div>
-
-                    <!-- Devices -->
                     <div hx-get="/deviceDiv" hx-trigger="load" hx-swap="outerHTML"></div>
                 </div>
             </div>

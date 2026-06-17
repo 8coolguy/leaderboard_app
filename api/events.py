@@ -3,6 +3,20 @@ from flask_socketio import emit,join_room,leave_room
 from flask import request,session
 from extensions import db
 
+
+def _broadcast_leaderboard(room_id):
+    """Send current leaderboard distances to all players in the room."""
+    players = db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").shallow().get().val()
+    if not players:
+        return
+    distances = []
+    for player in players:
+        data = db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").child(player).get().val()
+        if data:
+            distances.append(data.get('distance', 0))
+    emit("leaderboard", distances, to=room_id)
+
+
 @socketio.on("connect")
 def handle_connect():
     room_id=request.referrer.split("/")[-1]
@@ -12,26 +26,35 @@ def handle_connect():
     if room.child("state").get().val()=="s":
         start_time = db.child("rooms").child("current_rooms").child(room_id).child("start").get().val()
         emit("start",start_time,broadcast=False)
+
 @socketio.on("user_join")
 def handle_user_join(username):
     user=session['name']
     room_id=request.referrer.split("/")[-1]
-    if not str(room_id) in db.child("rooms").child("current_rooms").shallow().get().val(): return redirect(f'''/''')
-    db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":1})
+    if not str(room_id) in db.child("rooms").child("current_rooms").shallow().get().val(): 
+        return
+    # Ensure player exists in leaderboard (handles host who created the room)
+    db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":1, "name": session["name"]})
     print(f"User {username} {user} joined!")
     room=db.child("rooms").child("current_rooms").child(room_id)
     if room.child("state").get().val()=="s":
         distance = db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).child("distance").get().val()
         if not distance: distance =0
         emit("distance",distance,broadcast=False)
+    # Broadcast so everyone sees the new player's stick figure immediately
+    _broadcast_leaderboard(room_id)
     
 @socketio.on("user_leave")
 def handle_user_leave():
     room_id=request.referrer.split("/")[-1]
-    if not str(room_id) in db.child("rooms").child("current_rooms").shallow().get().val(): return redirect(f'''/''')
+    if not str(room_id) in db.child("rooms").child("current_rooms").shallow().get().val(): 
+        return
     db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update({"here":0})
     leave_room(room_id)
     print(session['name']+" left.")
+    # Broadcast so the leaving player's stick figure disappears
+    _broadcast_leaderboard(room_id)
+
 @socketio.on("activity_tick")
 def handle_activity_tick(data):
     
@@ -79,6 +102,7 @@ def handle_activity_tick(data):
     if response and leaderboardResponse:
         db.child("rooms").child("current_rooms").child(room_id).child("players").child(session["uid"]).child(start//1000).update(response)
         db.child("rooms").child("current_rooms").child(room_id).child("leaderboard").child(session["uid"]).update(leaderboardResponse)
+
 @socketio.on("activity_start")
 def handle_activity_start(start_time):
     #mark when activity started in current room and change state
@@ -96,9 +120,6 @@ def handle_activity_end(end_time):
     room_id=request.referrer.split("/")[-1]
     room=db.child("rooms").child("current_rooms").child(room_id)
     if room.child("state").get().val()=="s":
-        # db.child("rooms").child("current_rooms").child(room_id).update({"state":"f"})
-        # db.child("rooms").child("current_rooms").child(room_id).update({"end":end_time})
-        # get past room id 
         idf = db.child("rooms").child("current_rooms").child(room_id).child("id").get().val()
         
         #save history for all the players
@@ -119,6 +140,8 @@ def handle_leaderboard():
     uid = session['uid']
     room_id = request.referrer.split("/")[-1]
     players = db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").shallow().get().val()
+    if not players:
+        players = []
     res = []
     for player in players:
         distance = db.child("rooms").child("current_rooms").child(str(room_id)).child("leaderboard").child(player).get().val().get('distance',0)
@@ -127,8 +150,3 @@ def handle_leaderboard():
         else:
             res.append(distance)
     emit("leaderboard",res,broadcast=False)
-
-
-
-
-
