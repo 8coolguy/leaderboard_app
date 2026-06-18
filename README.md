@@ -1,6 +1,6 @@
 # Leaderboard App
 
-A virtual cycling leaderboard app that creates multiplayer rooms, connects to Bluetooth sensors for real-time ride data, and uploads completed rides to Strava.
+A cheap self-hosted indoor, not switft cycling leaderboard app that creates multiplayer rooms, connects to Bluetooth sensors for real-time ride data, and uploads completed rides to Strava. 
 
 **Stack:** Flask, HTMX, SocketIO, Firebase, Strava API, Web Bluetooth, C# .NET encoder
 
