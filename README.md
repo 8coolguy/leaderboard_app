@@ -102,9 +102,6 @@ Without the encoder running, the app falls back to generating `.gpx` files for d
 
 **Build the Docker image:**
 ```bash
-# From the project root, first generate the Dockerfile with env vars
-python generateDockerfile.py
-
 # Build
 docker build -t leaderboard-api -f api/Dockerfile api/
 
